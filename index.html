@@ -22,45 +22,47 @@ body {
   backface-visibility: hidden;
 }
 
-/* Overlay hover lama */
-.hover-overlay {
+/* Hover overlay lama */
+.middle {
   transition: .5s ease;
   opacity: 0;
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.2);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
 }
 
-.container:hover .hover-overlay {
+.container:hover .middle {
   opacity: 1;
 }
 
-/* Drop area baru */
+/* Drop area (placeholder) */
 .drop-area {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 80%;          /* 80% dari container */
-  padding-top: 80%;    /* ratio 1:1 */
+  width: 80%;
+  padding-top: 80%; /* ratio 1:1 */
   background-color: white;
   border: 2px solid rgba(0,0,0,0.5);
   transform: translate(-50%, -50%);
-  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
   cursor: pointer;
-  z-index: 2;           /* pastikan di atas image */
 }
 
+/* Teks drop area */
 .drop-area-text {
-  text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-size: 1em;
   color: #000;
-  pointer-events: none; /* teks tidak mengganggu klik */
+  pointer-events: none;
 }
 </style>
 </head>
@@ -71,9 +73,13 @@ body {
 
 <div class="container">
   <img src="placeholder.png" alt="Avatar" class="image">
-  <div class="hover-overlay"></div>
   
-  <!-- Drop area muncul saat overlay keluar / placeholder aktif -->
+  <!-- Overlay hover lama -->
+  <div class="middle">
+    <div class="text">Hover Overlay</div>
+  </div>
+  
+  <!-- Drop area muncul sebelum gambar diganti -->
   <div class="drop-area">
     <div class="drop-area-text">Seret atau ketuk gambar disini</div>
   </div>
