@@ -6,59 +6,106 @@
 body {
   margin: 5em auto;
   padding: 2em;
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
 }
+
 .container {
   position: relative;
-  width: 100%;
+  width: 300px; /* ukuran kotak bisa disesuaikan */
+  aspect-ratio: 1 / 1; /* menjaga rasio 1x1 */
+  border: 2px dashed #aaa;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.container:hover {
+  border-color: #04AA6D;
 }
 
 .image {
-  opacity: 1;
-  display: block;
   width: 100%;
-  height: auto;
-  transition: .5s ease;
-  backface-visibility: hidden;
+  height: 100%;
+  object-fit: cover;
+  display: none;
 }
 
-.middle {
-  transition: .5s ease;
-  opacity: 0;
+.drop-text {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
   text-align: center;
-}
-
-.container:hover .image {
-  opacity: 0.3;
-}
-
-.container:hover .middle {
-  opacity: 1;
-}
-
-.text {
-  background-color: #04AA6D;
-  color: white;
+  color: #666;
   font-size: 16px;
-  padding: 16px 32px;
+  pointer-events: none;
+  user-select: none;
+}
+
+input[type="file"] {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 </style>
 </head>
 <body>
 
-<h2>Opacity with Box</h2>
-<p>Hover over the image to see the effect.</p>
-
-<div class="container">
-  <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
-  <div class="middle">
-    <div class="text">John Doe</div>
-  </div>
+<div class="container" id="dropArea">
+  <img src="placeholder.png" alt="Preview" class="image" id="preview">
+  <div class="drop-text" id="dropText">Ketuk atau seret gambar di sini</div>
+  <input type="file" id="fileInput" accept="image/*">
 </div>
-  
+
+<script>
+const dropArea = document.getElementById('dropArea');
+const fileInput = document.getElementById('fileInput');
+const preview = document.getElementById('preview');
+const dropText = document.getElementById('dropText');
+
+// Saat file dipilih
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    preview.src = event.target.result;
+    preview.style.display = 'block';
+    dropText.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+// Event drag & drop
+dropArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropArea.style.borderColor = '#04AA6D';
+});
+
+dropArea.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  dropArea.style.borderColor = '#aaa';
+});
+
+dropArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropArea.style.borderColor = '#aaa';
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    preview.src = event.target.result;
+    preview.style.display = 'block';
+    dropText.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+</script>
+
 </body>
 </html>
