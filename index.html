@@ -31,15 +31,15 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  width: 70%;              /* lebih besar (70% dari lebar gambar) */
-  aspect-ratio: 1 / 1;     /* rasio kotak 1x1 */
-  border: 3px dashed #555; /* warna tepi abu kehitaman */
+  width: 70%;
+  aspect-ratio: 1 / 1;
+  border: 3px dashed #555;
   border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: transparent;
-  pointer-events: none; /* nonaktif sebelum hover */
+  pointer-events: none; /* tidak aktif dulu */
 }
 
 .container:hover .image {
@@ -48,8 +48,7 @@ body {
 
 .container:hover .middle {
   opacity: 1;
-  pointer-events: auto; /* aktif hanya saat hover */
-  cursor: pointer;
+  pointer-events: auto; /* aktif saat hover */
 }
 
 .text {
@@ -60,17 +59,14 @@ body {
 }
 
 /* === INPUT FILE === */
-input[type="file"] {
+#fileInput {
   position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  pointer-events: auto;
   width: 100%;
   height: 100%;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.container:hover input[type="file"] {
-  pointer-events: auto; /* aktif hanya saat overlay muncul */
-  cursor: pointer;
 }
 </style>
 </head>
@@ -80,16 +76,27 @@ input[type="file"] {
 <p>Hover over the image to see the effect.</p>
 
 <div class="container" id="container">
-  <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
+  <img src="placeholder.png" alt="Avatar" class="image">
   <div class="middle" id="dropArea">
     <div class="text">Ketuk atau seret gambar di sini</div>
+    <!-- input hanya aktif di area kotak -->
     <input type="file" id="fileInput" accept="image/*">
   </div>
 </div>
 
 <script>
+const container = document.getElementById('container');
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
+
+// Nonaktifkan semua klik di luar drop area
+container.addEventListener('click', (e) => {
+  // Jika bukan klik langsung pada file input, abaikan
+  if (!dropArea.contains(e.target)) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+});
 
 // Drag over
 dropArea.addEventListener('dragover', (e) => {
@@ -113,7 +120,7 @@ dropArea.addEventListener('drop', (e) => {
   if (file) handleFile(file);
 });
 
-// Klik upload manual
+// Klik file input (hanya di dalam kotak)
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) handleFile(file);
@@ -122,9 +129,7 @@ fileInput.addEventListener('change', (e) => {
 function handleFile(file) {
   const reader = new FileReader();
   reader.onload = (ev) => {
-    // tampilkan langsung di placeholder
-    const img = document.querySelector('.image');
-    img.src = ev.target.result;
+    document.querySelector('.image').src = ev.target.result;
     alert(`Gambar "${file.name}" berhasil dimuat!`);
   };
   reader.readAsDataURL(file);
