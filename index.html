@@ -12,6 +12,7 @@ body {
   width: 100%;
 }
 
+/* Gambar utama */
 .image {
   opacity: 1;
   display: block;
@@ -21,40 +22,45 @@ body {
   backface-visibility: hidden;
 }
 
+/* Overlay hover lama */
+.hover-overlay {
+  transition: .5s ease;
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.2);
+}
+
+.container:hover .hover-overlay {
+  opacity: 1;
+}
+
 /* Drop area baru */
-.middle {
+.drop-area {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 80%;          /* 80% dari container */
-  padding-top: 80%;    /* untuk ratio 1:1 */
+  padding-top: 80%;    /* ratio 1:1 */
   background-color: white;
   border: 2px solid rgba(0,0,0,0.5);
   transform: translate(-50%, -50%);
-  text-align: center;
   box-sizing: border-box;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  z-index: 2;           /* pastikan di atas image */
 }
 
-.middle-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.drop-area-text {
+  text-align: center;
   font-size: 1em;
   color: #000;
-}
-
-.container:hover .image {
-  opacity: 0.3;
-}
-
-.container:hover .middle {
-  /* tetap visible */
-  opacity: 1;
+  pointer-events: none; /* teks tidak mengganggu klik */
 }
 </style>
 </head>
@@ -64,9 +70,12 @@ body {
 <p>Seret atau ketuk area untuk mengunggah gambar.</p>
 
 <div class="container">
-  <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
-  <div class="middle">
-    <div class="middle-text">Seret atau ketuk gambar disini</div>
+  <img src="placeholder.png" alt="Avatar" class="image">
+  <div class="hover-overlay"></div>
+  
+  <!-- Drop area muncul saat overlay keluar / placeholder aktif -->
+  <div class="drop-area">
+    <div class="drop-area-text">Seret atau ketuk gambar disini</div>
   </div>
 </div>
   
