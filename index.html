@@ -22,7 +22,7 @@ body {
   backface-visibility: hidden;
 }
 
-/* overlay drop area */
+/* === DROP AREA OVERLAY === */
 .middle {
   transition: .5s ease;
   opacity: 0;
@@ -31,15 +31,15 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  width: 50%; /* setengah dari lebar placeholder */
-  aspect-ratio: 1 / 1; /* rasio 1x1 */
-  border: 3px dashed #04AA6D;
+  width: 70%;              /* lebih besar (70% dari lebar gambar) */
+  aspect-ratio: 1 / 1;     /* rasio kotak 1x1 */
+  border: 3px dashed #555; /* warna tepi abu kehitaman */
   border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: transparent; /* transparan sesuai permintaan */
-  pointer-events: none; /* tidak bisa diklik sebelum hover */
+  background-color: transparent;
+  pointer-events: none; /* nonaktif sebelum hover */
 }
 
 .container:hover .image {
@@ -48,18 +48,18 @@ body {
 
 .container:hover .middle {
   opacity: 1;
-  pointer-events: auto; /* aktif saat hover */
+  pointer-events: auto; /* aktif hanya saat hover */
   cursor: pointer;
 }
 
 .text {
-  color: #04AA6D;
+  color: #555;
   font-size: 18px;
   user-select: none;
   pointer-events: none;
 }
 
-/* input file transparan, aktif saat hover */
+/* === INPUT FILE === */
 input[type="file"] {
   position: absolute;
   width: 100%;
@@ -69,7 +69,7 @@ input[type="file"] {
 }
 
 .container:hover input[type="file"] {
-  pointer-events: auto;
+  pointer-events: auto; /* aktif hanya saat overlay muncul */
   cursor: pointer;
 }
 </style>
@@ -93,33 +93,42 @@ const fileInput = document.getElementById('fileInput');
 
 // Drag over
 dropArea.addEventListener('dragover', (e) => {
-  if (dropArea.style.opacity !== "1") return; // hanya aktif saat hover
+  if (getComputedStyle(dropArea).opacity !== "1") return;
   e.preventDefault();
-  dropArea.style.borderColor = '#008f56';
+  dropArea.style.borderColor = '#333';
 });
 
 // Drag leave
 dropArea.addEventListener('dragleave', (e) => {
   e.preventDefault();
-  dropArea.style.borderColor = '#04AA6D';
+  dropArea.style.borderColor = '#555';
 });
 
-// Drop file
+// Drop
 dropArea.addEventListener('drop', (e) => {
-  if (dropArea.style.opacity !== "1") return;
+  if (getComputedStyle(dropArea).opacity !== "1") return;
   e.preventDefault();
-  dropArea.style.borderColor = '#04AA6D';
+  dropArea.style.borderColor = '#555';
   const file = e.dataTransfer.files[0];
-  if (file) alert(`File "${file.name}" siap diunggah.`);
+  if (file) handleFile(file);
 });
 
-// Klik input file hanya bisa saat hover
-fileInput.addEventListener('click', (e) => {
-  if (dropArea.style.opacity !== "1") {
-    e.preventDefault();
-    return;
-  }
+// Klik upload manual
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) handleFile(file);
 });
+
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    // tampilkan langsung di placeholder
+    const img = document.querySelector('.image');
+    img.src = ev.target.result;
+    alert(`Gambar "${file.name}" berhasil dimuat!`);
+  };
+  reader.readAsDataURL(file);
+}
 </script>
 
 </body>
