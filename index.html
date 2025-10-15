@@ -21,15 +21,31 @@ body {
   backface-visibility: hidden;
 }
 
+/* Drop area baru */
 .middle {
-  transition: .5s ease;
-  opacity: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;          /* 80% dari container */
+  padding-top: 80%;    /* untuk ratio 1:1 */
+  background-color: white;
+  border: 2px solid rgba(0,0,0,0.5);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.middle-text {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
-  text-align: center;
+  font-size: 1em;
+  color: #000;
 }
 
 .container:hover .image {
@@ -37,26 +53,20 @@ body {
 }
 
 .container:hover .middle {
+  /* tetap visible */
   opacity: 1;
-}
-
-.text {
-  background-color: #04AA6D;
-  color: white;
-  font-size: 16px;
-  padding: 16px 32px;
 }
 </style>
 </head>
 <body>
 
-<h2>Opacity with Box</h2>
-<p>Hover over the image to see the effect.</p>
+<h2>Drop Area Gambar</h2>
+<p>Seret atau ketuk area untuk mengunggah gambar.</p>
 
 <div class="container">
   <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
   <div class="middle">
-    <div class="text">John Doe</div>
+    <div class="middle-text">Seret atau ketuk gambar disini</div>
   </div>
 </div>
   
