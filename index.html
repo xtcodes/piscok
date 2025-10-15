@@ -30,8 +30,8 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  width: 150px; /* ukuran drop area */
-  aspect-ratio: 1 / 1; /* menjaga rasio 1x1 */
+  width: 150px; /* drop area */
+  aspect-ratio: 1 / 1;
   border: 2px dashed #04AA6D;
   border-radius: 10px;
   display: flex;
@@ -39,6 +39,7 @@ body {
   align-items: center;
   background-color: rgba(255,255,255,0.7);
   cursor: pointer;
+  pointer-events: none; /* tidak bisa diklik sebelum hover */
 }
 
 .container:hover .image {
@@ -47,6 +48,7 @@ body {
 
 .container:hover .middle {
   opacity: 1;
+  pointer-events: auto; /* aktif saat overlay muncul */
 }
 
 .text {
@@ -54,6 +56,14 @@ body {
   font-size: 16px;
   pointer-events: none;
   user-select: none;
+}
+
+input[type="file"] {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -64,11 +74,39 @@ body {
 
 <div class="container">
   <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
-  <div class="middle">
+  <div class="middle" id="dropArea">
     <div class="text">Ketuk atau seret gambar di sini</div>
-    <input type="file" accept="image/*" style="position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;">
+    <input type="file" id="fileInput" accept="image/*">
   </div>
 </div>
+
+<script>
+const dropArea = document.getElementById('dropArea');
+const fileInput = document.getElementById('fileInput');
+
+dropArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropArea.style.borderColor = '#008f56';
+});
+
+dropArea.addEventListener('dragleave', () => {
+  dropArea.style.borderColor = '#04AA6D';
+});
+
+dropArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropArea.style.borderColor = '#04AA6D';
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    alert(`File "${file.name}" siap diunggah (belum diunggah otomatis).`);
+  }
+});
+
+fileInput.addEventListener('click', (e) => {
+  // hanya memberi tahu, bukan langsung upload
+  console.log("User membuka pemilih file.");
+});
+</script>
 
 </body>
 </html>
