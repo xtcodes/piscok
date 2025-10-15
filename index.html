@@ -6,11 +6,12 @@
 body {
   margin: 5em auto;
   padding: 2em;
-  font-family: sans-serif;
 }
 .container {
   position: relative;
   width: 100%;
+  max-width: 400px;
+  margin: auto;
 }
 
 .image {
@@ -22,65 +23,45 @@ body {
   backface-visibility: hidden;
 }
 
-/* === DROP AREA OVERLAY === */
-.middle {
+.drop-area {
   transition: .5s ease;
   opacity: 0;
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
   width: 70%;
-  aspect-ratio: 1 / 1;
-  border: 3px dashed #555;
-  border-radius: 12px;
+  aspect-ratio: 1/1;
+  border: 3px dashed rgba(0,0,0,0.5);
+  border-radius: 10px;
+  transform: translate(-50%, -50%);
   display: flex;
-  justify-content: center;
   align-items: center;
-  background-color: transparent;
-  pointer-events: none; /* tidak aktif dulu */
+  justify-content: center;
+  cursor: pointer;
 }
 
-.container:hover .image {
-  opacity: 0.3;
-}
-
-.container:hover .middle {
+.container.show-overlay .drop-area {
   opacity: 1;
-  pointer-events: auto; /* aktif saat hover */
 }
 
 .text {
-  color: #555;
-  font-size: 18px;
+  color: rgba(0,0,0,0.8);
+  font-size: 16px;
+  text-align: center;
   user-select: none;
-  pointer-events: none;
-}
-
-/* === INPUT FILE === */
-#fileInput {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-  pointer-events: auto;
-  width: 100%;
-  height: 100%;
 }
 </style>
 </head>
 <body>
 
 <h2>Opacity with Box</h2>
-<p>Hover over the image to see the effect.</p>
+<p>Ketuk di area gambar untuk munculkan drop area.</p>
 
 <div class="container" id="container">
-  <img src="placeholder.png" alt="Avatar" class="image">
-  <div class="middle" id="dropArea">
+  <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
+  <div class="drop-area" id="dropArea">
     <div class="text">Ketuk atau seret gambar di sini</div>
-    <!-- input hanya aktif di area kotak -->
-    <input type="file" id="fileInput" accept="image/*">
+    <input type="file" id="fileInput" style="display:none" accept="image/*">
   </div>
 </div>
 
@@ -89,51 +70,18 @@ const container = document.getElementById('container');
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
 
-// Nonaktifkan semua klik di luar drop area
+// Ketuk area mana saja → tampilkan overlay drop area
 container.addEventListener('click', (e) => {
-  // Jika bukan klik langsung pada file input, abaikan
-  if (!dropArea.contains(e.target)) {
-    e.stopPropagation();
-    e.preventDefault();
+  if (!container.classList.contains('show-overlay')) {
+    container.classList.add('show-overlay');
   }
 });
 
-// Drag over
-dropArea.addEventListener('dragover', (e) => {
-  if (getComputedStyle(dropArea).opacity !== "1") return;
-  e.preventDefault();
-  dropArea.style.borderColor = '#333';
+// Ketuk langsung di dalam drop area → baru buka file picker
+dropArea.addEventListener('click', (e) => {
+  e.stopPropagation(); // cegah trigger parent
+  fileInput.click();
 });
-
-// Drag leave
-dropArea.addEventListener('dragleave', (e) => {
-  e.preventDefault();
-  dropArea.style.borderColor = '#555';
-});
-
-// Drop
-dropArea.addEventListener('drop', (e) => {
-  if (getComputedStyle(dropArea).opacity !== "1") return;
-  e.preventDefault();
-  dropArea.style.borderColor = '#555';
-  const file = e.dataTransfer.files[0];
-  if (file) handleFile(file);
-});
-
-// Klik file input (hanya di dalam kotak)
-fileInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) handleFile(file);
-});
-
-function handleFile(file) {
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    document.querySelector('.image').src = ev.target.result;
-    alert(`Gambar "${file.name}" berhasil dimuat!`);
-  };
-  reader.readAsDataURL(file);
-}
 </script>
 
 </body>
