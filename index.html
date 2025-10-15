@@ -22,7 +22,7 @@ body {
   backface-visibility: hidden;
 }
 
-/* overlay */
+/* overlay drop area */
 .middle {
   transition: .5s ease;
   opacity: 0;
@@ -31,15 +31,15 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  width: 150px; /* drop area kotak */
-  aspect-ratio: 1 / 1;
-  border: 2px dashed #04AA6D;
-  border-radius: 10px;
+  width: 50%; /* setengah dari lebar placeholder */
+  aspect-ratio: 1 / 1; /* rasio 1x1 */
+  border: 3px dashed #04AA6D;
+  border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(255,255,255,0.7);
-  pointer-events: none; /* default: tidak bisa diklik */
+  background-color: transparent; /* transparan sesuai permintaan */
+  pointer-events: none; /* tidak bisa diklik sebelum hover */
 }
 
 .container:hover .image {
@@ -48,28 +48,28 @@ body {
 
 .container:hover .middle {
   opacity: 1;
-  pointer-events: auto; /* aktif hanya saat hover */
+  pointer-events: auto; /* aktif saat hover */
   cursor: pointer;
 }
 
 .text {
-  color: #333;
-  font-size: 16px;
+  color: #04AA6D;
+  font-size: 18px;
   user-select: none;
   pointer-events: none;
 }
 
-/* input file transparan di dalam kotak, tapi baru aktif saat hover */
+/* input file transparan, aktif saat hover */
 input[type="file"] {
   position: absolute;
   width: 100%;
   height: 100%;
   opacity: 0;
-  pointer-events: none; /* nonaktif dulu */
+  pointer-events: none;
 }
 
 .container:hover input[type="file"] {
-  pointer-events: auto; /* aktif hanya saat overlay muncul */
+  pointer-events: auto;
   cursor: pointer;
 }
 </style>
@@ -91,20 +91,22 @@ input[type="file"] {
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
 
-// Hanya aktif saat overlay muncul (hover)
+// Drag over
 dropArea.addEventListener('dragover', (e) => {
-  if (dropArea.style.opacity !== "1") return; // tidak aktif sebelum hover
+  if (dropArea.style.opacity !== "1") return; // hanya aktif saat hover
   e.preventDefault();
   dropArea.style.borderColor = '#008f56';
 });
 
+// Drag leave
 dropArea.addEventListener('dragleave', (e) => {
   e.preventDefault();
   dropArea.style.borderColor = '#04AA6D';
 });
 
+// Drop file
 dropArea.addEventListener('drop', (e) => {
-  if (dropArea.style.opacity !== "1") return; // tidak aktif sebelum hover
+  if (dropArea.style.opacity !== "1") return;
   e.preventDefault();
   dropArea.style.borderColor = '#04AA6D';
   const file = e.dataTransfer.files[0];
@@ -114,7 +116,7 @@ dropArea.addEventListener('drop', (e) => {
 // Klik input file hanya bisa saat hover
 fileInput.addEventListener('click', (e) => {
   if (dropArea.style.opacity !== "1") {
-    e.preventDefault(); // blok sebelum hover
+    e.preventDefault();
     return;
   }
 });
