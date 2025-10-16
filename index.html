@@ -77,7 +77,7 @@ p {
   object-fit: contain; 
   pointer-events: none;
   transition: opacity 0.3s ease, filter 0.3s ease;
-  background-color: #e0e0e0; /* LATAR BELAKANG PLACHOLDER: Abu-abu Terang */
+  background-color: #e0e0e0; 
 }
 
 .container:not(.uploaded):hover .image {
@@ -108,6 +108,7 @@ p {
   z-index: 10; 
 }
 
+/* FIX: Pastikan dropArea aktif di awal untuk menampilkan tulisan upload */
 .middle.active {
   pointer-events: auto;
   opacity: 1;
@@ -198,7 +199,7 @@ canvas:active {
 
         <div class="container" id="container">
           <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Upload Gambar Anda" class="image"> 
-          <div class="middle" id="dropArea">Klik atau seret disini</div>
+          <div class="middle active" id="dropArea">Klik atau seret disini</div>
           <canvas id="canvas"></canvas>
         </div>
 
@@ -334,9 +335,12 @@ const resetToInitialState = (errorMessage = null) => {
 
     canvas.style.display = 'none'; 
     container.classList.remove('finished');
-    dropArea.classList.remove('active'); 
-    dropArea.style.opacity = '0';
-    dropArea.style.visibility = 'hidden';
+    
+    // FIX: Saat reset, kembalikan tampilan dropArea seperti di awal
+    dropArea.classList.add('active'); 
+    dropArea.style.opacity = '1';
+    dropArea.style.visibility = 'visible';
+    dropArea.classList.remove('dragover');
     
     downloadButton.style.display = 'none';
     shareButton.style.display = 'none'; 
@@ -370,9 +374,12 @@ function mergeImages(userImgSrc) {
 
     canvas.style.display = 'block';
     image.style.display = 'none'; 
+    
+    // Sembunyikan dropArea setelah upload berhasil
     dropArea.style.opacity = '0'; 
     dropArea.style.visibility = 'hidden';
     dropArea.classList.remove('active'); 
+
     container.classList.add('uploaded'); 
     container.classList.remove('finished');
     container.style.cursor = 'default'; 
@@ -395,7 +402,7 @@ function mergeImages(userImgSrc) {
   userImage.onerror = () => resetToInitialState('Gagal memuat gambar user! Pastikan file gambar valid.');
   userImage.src = userImgSrc;
 
-  // Twibbon mulai dimuat HANYA saat gambar user diunggah.
+  // Twibbon mulai dimuat HANYA saat gambar user diunggah (Lazy Load).
   twibbonImage.onload = drawIfReady;
   twibbonImage.onerror = () => resetToInitialState('Gagal memuat twibbon! Pastikan file "twibbon.png" ada.');
   twibbonImage.src = TWIBBON_URL;
@@ -489,21 +496,26 @@ async function shareImage() {
 // --- Event Listeners Awal ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Pastikan resetToInitialState dipanggil untuk memastikan semua state dan visual awal benar
-    resetToInitialState();
+    // FIX: Tidak perlu memanggil resetToInitialState karena dropArea sudah disetel 'active' di HTML
+    // dan css sudah mengurus tampilan initial
+    
+    container.classList.remove('uploaded');
+    container.style.cursor = 'default';
+    
+    downloadButton.style.display = 'none';
+    shareButton.style.display = 'none';
 });
 
-// Mengelola visual drop area
+// Mengelola visual drop area saat mouse hover (efek blur)
 container.addEventListener('mouseenter', () => {
     if (!container.classList.contains('uploaded')) {
-        dropArea.classList.add('active'); 
+        // dropArea sudah aktif di awal, hanya tambahkan visual hover jika belum diupload
         container.style.cursor = 'pointer'; 
     }
 });
 
 container.addEventListener('mouseleave', () => {
     if (!container.classList.contains('uploaded') && !dropArea.classList.contains('dragover')) {
-        dropArea.classList.remove('active'); 
         container.style.cursor = 'default'; 
     }
 });
@@ -520,26 +532,18 @@ fileInput.addEventListener('change', e => {
     const reader = new FileReader();
     reader.onload = ev => mergeImages(ev.target.result);
     reader.readAsDataURL(e.target.files[0]);
-    
-    dropArea.classList.remove('active');
-    dropArea.style.opacity = '0';
-    dropArea.style.visibility = 'hidden';
   }
 });
 
 // drag & drop events
 dropArea.addEventListener('dragover', e => {
   e.preventDefault(); 
-  if (!dropArea.classList.contains('active')) {
-      dropArea.classList.add('active');
-  }
+  dropArea.classList.add('active'); // Pastikan tetap aktif
   dropArea.classList.add('dragover');
 });
 
 dropArea.addEventListener('dragleave', () => {
   dropArea.classList.remove('dragover');
-  dropArea.classList.remove('active'); 
-  container.style.cursor = 'default'; 
 });
 
 dropArea.addEventListener('drop', e => {
@@ -549,10 +553,6 @@ dropArea.addEventListener('drop', e => {
     const reader = new FileReader();
     reader.onload = ev => mergeImages(ev.target.result);
     reader.readAsDataURL(e.dataTransfer.files[0]);
-    
-    dropArea.classList.remove('active');
-    dropArea.style.opacity = '0';
-    dropArea.style.visibility = 'hidden';
   }
 });
 
