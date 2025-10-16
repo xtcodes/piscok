@@ -21,6 +21,7 @@ body {
   backface-visibility: hidden;
 }
 
+/* middle tetap di tempatnya tapi hidden awal */
 .middle {
   transition: .5s ease;
   opacity: 0;
@@ -38,15 +39,22 @@ body {
   align-items: center;
   justify-content: center;
   color: #333;
-  cursor: pointer; /* klik sekarang aktif */
+  cursor: pointer;
+  pointer-events: none; /* nonaktif klik awal */
 }
 
 .container:hover .image {
   opacity: 0.3;
 }
 
+/* hover tetap muncul */
 .container:hover .middle {
   opacity: 1;
+}
+
+/* saat overlay aktif, drop area aktif */
+.middle.active {
+  pointer-events: auto; /* klik bisa diterima */
 }
 
 .middle.dragover {
@@ -57,8 +65,8 @@ body {
 </head>
 <body>
 
-<h2>Drop Area Drag & Klik</h2>
-<p>Seret gambar ke area atau ketuk untuk memilih file.</p>
+<h2>Drop Area Hanya Aktif Saat Overlay</h2>
+<p>Drop area baru bisa diinteraksi setelah overlay muncul.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
@@ -71,9 +79,20 @@ body {
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
+const container = document.getElementById('container');
 
-// klik drop area -> buka file dialog
+// simulasi overlay muncul (misal hover atau event tertentu)
+container.addEventListener('mouseenter', () => {
+  dropArea.classList.add('active');
+});
+
+container.addEventListener('mouseleave', () => {
+  dropArea.classList.remove('active');
+});
+
+// klik hanya aktif jika drop area aktif
 dropArea.addEventListener('click', () => {
+  if (!dropArea.classList.contains('active')) return;
   fileInput.click();
 });
 
@@ -89,18 +108,21 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// drag & drop
+// drag & drop hanya aktif jika drop area aktif
 dropArea.addEventListener('dragover', (e) => {
+  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.add('dragover');
 });
 
 dropArea.addEventListener('dragleave', (e) => {
+  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.remove('dragover');
 });
 
 dropArea.addEventListener('drop', (e) => {
+  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.remove('dragover');
 
