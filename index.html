@@ -49,20 +49,73 @@ body {
   opacity: 1;
 }
 
-/* hapus styling .text, karena sekarang drop area langsung di middle */
+/* efek saat drag di dalam area */
+.middle.dragover {
+  background-color: #f0f0f0;
+  border-color: #04AA6D;
+}
 </style>
 </head>
 <body>
 
-<h2>Opacity with Box</h2>
-<p>Hover over the image to see the effect.</p>
+<h2>Opacity with Box + Upload</h2>
+<p>Seret atau ketuk gambar di area drop.</p>
 
-<div class="container">
+<div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
-  <div class="middle">
-    Seret atau ketuk disini
-  </div>
+  <div class="middle" id="dropArea">Seret atau ketuk disini</div>
 </div>
+
+<!-- input file tersembunyi -->
+<input type="file" id="fileInput" style="display:none" accept="image/*">
+
+<script>
+const dropArea = document.getElementById('dropArea');
+const fileInput = document.getElementById('fileInput');
+const image = document.querySelector('.image');
+
+// klik drop area -> buka file dialog
+dropArea.addEventListener('click', () => {
+  fileInput.click();
+});
+
+// pilih file melalui dialog
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files && e.target.files[0]) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      image.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// drag & drop
+dropArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropArea.classList.add('dragover');
+});
+
+dropArea.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  dropArea.classList.remove('dragover');
+});
+
+dropArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropArea.classList.remove('dragover');
+
+  const files = e.dataTransfer.files;
+  if (files && files[0]) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      image.src = event.target.result;
+    };
+    reader.readAsDataURL(files[0]);
+  }
+});
+</script>
   
 </body>
 </html>
