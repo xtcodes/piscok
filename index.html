@@ -14,6 +14,7 @@ body {
   width: 100%;
   max-width: 400px;
   margin: auto;
+  cursor: pointer; /* klik pertama untuk overlay */
 }
 
 /* Gambar placeholder */
@@ -22,7 +23,7 @@ body {
   width: 100%;
   height: auto;
   pointer-events: none; /* klik tidak memicu upload */
-  transition: 0.5s ease;
+  transition: opacity 0.3s ease;
 }
 
 /* Overlay */
@@ -32,7 +33,7 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   width: 80%;
-  aspect-ratio: 1/1;
+  aspect-ratio: 1 / 1;
   background-color: rgba(255,255,255,0.95);
   border: 2px solid rgba(0,0,0,0.5);
   display: flex;
@@ -42,22 +43,21 @@ body {
   cursor: pointer;
   pointer-events: none; /* aktif hanya saat overlay aktif */
   user-select: none;
-  
-  /* Animasi smooth */
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
-/* Hover visual untuk desktop */
-.container:hover .image {
-  opacity: 0.3;
+/* Hover desktop */
+@media (hover: hover) {
+  .container:hover .image {
+    opacity: 0.3; /* image transparan saat hover */
+  }
+  .container:hover .middle {
+    opacity: 1; /* overlay muncul visual */
+  }
 }
 
-.container:hover .middle {
-  opacity: 1;
-}
-
-/* Overlay aktif (klik atau tap) */
+/* Overlay aktif (klik) */
 .middle.active {
   pointer-events: auto;
   opacity: 1;
@@ -67,20 +67,12 @@ body {
   background-color: #f0f0f0;
   border-color: #04AA6D;
 }
-
-/* Mobile: touch effect */
-@media (hover: none) {
-  .container:hover .image,
-  .container:hover .middle {
-    opacity: 1; /* agar overlay muncul saat tap */
-  }
-}
 </style>
 </head>
 <body>
 
-<h2>Upload Gambar Aman & Smooth</h2>
-<p>Hover/tap untuk visual, klik di drop area untuk upload. Placeholder aman.</p>
+<h2>Upload Gambar Aman + Hover</h2>
+<p>Hover visual untuk desktop, klik di placeholder untuk menampilkan overlay. Upload hanya di drop area.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -95,14 +87,14 @@ const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 
-// Klik pertama di placeholder → tampilkan overlay
+// Klik pertama di placeholder → aktifkan overlay
 container.addEventListener('click', () => {
   dropArea.classList.add('active');
 });
 
 // Klik di overlay → buka file dialog
 dropArea.addEventListener('click', (e) => {
-  e.stopPropagation(); // cegah bubbling
+  e.stopPropagation();
   fileInput.click();
 });
 
