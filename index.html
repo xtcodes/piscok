@@ -276,6 +276,8 @@ const resetToInitialState = (errorMessage = null) => {
     image.style.opacity = '1';
 
     canvas.style.display = 'none'; 
+    // Hapus class 'finished' saat reset untuk mengaktifkan kembali interaksi
+    container.classList.remove('finished');
     dropArea.classList.remove('active'); 
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
@@ -316,6 +318,7 @@ function mergeImages(userImgSrc) {
     dropArea.style.visibility = 'hidden';
     dropArea.classList.remove('active'); 
     container.classList.add('uploaded'); 
+    container.classList.remove('finished'); // Pastikan interaksi aktif saat upload
     container.style.cursor = 'default'; 
     
     downloadButton.style.display = 'block';
@@ -497,18 +500,20 @@ dropArea.addEventListener('drop', e => {
   }
 });
 
-// --- PERBAIKAN JAVASCRIPT: Tombol Unduh (Ganti Teks menjadi 'Selesai') ---
+// --- PERBAIKAN JAVASCRIPT: Tombol Unduh (Ganti Teks menjadi 'Selesai' dan Nonaktifkan Interaksi) ---
 downloadButton.addEventListener('click', () => {
-    if (downloadButton.disabled) return; // Mencegah eksekusi jika sudah disabled
+    if (downloadButton.disabled) return;
     
     // 1. Ubah teks dan disabled tombol saat mulai proses
     downloadButton.textContent = 'Diproses...';
-    downloadButton.disabled = true; // Tetap disabled saat proses berlangsung
+    downloadButton.disabled = true; 
+    
+    // PENTING: TAMBAHKAN CLASS 'finished' UNTUK MENCEGAH INTERAKSI
+    container.classList.add('finished');
 
     getFinalCanvasBlob((blob) => {
         if (!blob) {
             console.error('Gagal membuat blob gambar.');
-            // Jika gagal, tampilkan 'Gagal!'
             downloadButton.textContent = 'Gagal!';
             return;
         }
@@ -537,8 +542,11 @@ shareButton.addEventListener('click', shareImage);
 // --- FITUR GESER (PAN) DAN ZOOM (PINCH) (Kode Asli Anda) ---
 // ==========================================================
 
+// Periksa class 'finished' untuk nonaktifkan interaksi
+
 canvas.addEventListener('wheel', e => {
-    if (!container.classList.contains('uploaded')) return;
+    // Nonaktifkan jika class 'finished' ada
+    if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
 
     e.preventDefault();
     
@@ -553,7 +561,8 @@ canvas.addEventListener('wheel', e => {
 });
 
 canvas.addEventListener('mousedown', e => {
-    if (!container.classList.contains('uploaded')) return;
+    // Nonaktifkan jika class 'finished' ada
+    if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
     isDragging = true;
     lastX = e.clientX;
@@ -561,7 +570,8 @@ canvas.addEventListener('mousedown', e => {
 });
 
 canvas.addEventListener('mousemove', e => {
-    if (!isDragging || !container.classList.contains('uploaded')) return;
+    // Nonaktifkan jika class 'finished' ada
+    if (!isDragging || !container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
     
     const dx = e.clientX - lastX;
@@ -593,7 +603,8 @@ let initialPinchDistance = null;
 let initialScale = 1;
 
 canvas.addEventListener('touchstart', e => {
-    if (!container.classList.contains('uploaded')) return;
+    // Nonaktifkan jika class 'finished' ada
+    if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
 
     for (let i = 0; i < e.touches.length; i++) {
@@ -615,7 +626,8 @@ canvas.addEventListener('touchstart', e => {
 });
 
 canvas.addEventListener('touchmove', e => {
-    if (!container.classList.contains('uploaded')) return;
+    // Nonaktifkan jika class 'finished' ada
+    if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
 
     for (let i = 0; i < e.touches.length; i++) {
@@ -650,7 +662,8 @@ canvas.addEventListener('touchmove', e => {
 });
 
 canvas.addEventListener('touchend', e => {
-    if (!container.classList.contains('uploaded')) return;
+    // Nonaktifkan jika class 'finished' ada
+    if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
 
     for (let i = 0; i < e.changedTouches.length; i++) {
         delete pointers[e.changedTouches[i].identifier];
