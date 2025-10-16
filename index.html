@@ -104,34 +104,44 @@ const twibbonSrc = 'twibbon.png';
 function mergeImages(userImgSrc) {
   const userImg = new Image();
   const twibbon = new Image();
-  userImg.crossOrigin = "anonymous";
-  twibbon.crossOrigin = "anonymous";
+  let loadedCount = 0;
+
+  function drawIfReady() {
+    loadedCount++;
+    if (loadedCount < 2) return; // tunggu kedua gambar load
+
+    // Set canvas ukuran kotak terbesar dari userImg
+    const size = Math.max(userImg.width, userImg.height);
+    canvas.width = size;
+    canvas.height = size;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw user image, scaled & centered
+    const scale = Math.min(canvas.width / userImg.width, canvas.height / userImg.height);
+    const x = (canvas.width - userImg.width * scale) / 2;
+    const y = (canvas.height - userImg.height * scale) / 2;
+    ctx.drawImage(userImg, x, y, userImg.width * scale, userImg.height * scale);
+
+    // Draw twibbon overlay full canvas
+    ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
+
+    // Tampilkan canvas dan sembunyikan img
+    canvas.style.display = 'block';
+    image.style.display = 'none';
+  }
+
+  // Load gambar user
+  userImg.onload = drawIfReady;
+  userImg.onerror = () => alert('Gagal load gambar user!');
+
+  // Load twibbon
+  twibbon.onload = drawIfReady;
+  twibbon.onerror = () => alert('Gagal load twibbon! Pastikan twibbon.png ada di folder yang sama.');
+
   userImg.src = userImgSrc;
   twibbon.src = twibbonSrc;
-
-  userImg.onload = () => {
-    twibbon.onload = () => {
-      const size = Math.max(userImg.width, userImg.height);
-      canvas.width = size;
-      canvas.height = size;
-
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw user image, scaled & centered
-      const scale = Math.min(canvas.width / userImg.width, canvas.height / userImg.height);
-      const x = (canvas.width - userImg.width * scale) / 2;
-      const y = (canvas.height - userImg.height * scale) / 2;
-      ctx.drawImage(userImg, x, y, userImg.width * scale, userImg.height * scale);
-
-      // Draw twibbon overlay full canvas
-      ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
-
-      // Tampilkan canvas dan sembunyikan img
-      canvas.style.display = 'block';
-      image.style.display = 'none';
-    };
-  };
 }
 
 // Klik placeholder → aktifkan overlay
@@ -148,14 +158,13 @@ dropArea.addEventListener('click', (e) => {
 // Upload file
 fileInput.addEventListener('change', (e) => {
   if (e.target.files && e.target.files[0]) {
-    const file = e.target.files[0];
     const reader = new FileReader();
     reader.onload = (event) => {
       mergeImages(event.target.result);
       dropArea.style.display = 'none';
       container.classList.add('uploaded');
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(e.target.files[0]);
   }
 });
 
@@ -174,18 +183,18 @@ dropArea.addEventListener('drop', (e) => {
   if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.remove('dragover');
-  const files = e.dataTransfer.files;
-  if (files && files[0]) {
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
     const reader = new FileReader();
     reader.onload = (event) => {
       mergeImages(event.target.result);
       dropArea.style.display = 'none';
       container.classList.add('uploaded');
     };
-    reader.readAsDataURL(files[0]);
+    reader.readAsDataURL(e.dataTransfer.files[0]);
   }
 });
 </script>
+
 
 </body>
 </html>
