@@ -6,59 +6,57 @@
 body {
   margin: 5em auto;
   padding: 2em;
+  font-family: sans-serif;
 }
+
 .container {
   position: relative;
   width: 100%;
+  margin: auto;
 }
 
 .image {
-  opacity: 1;
   display: block;
   width: 100%;
   height: auto;
-  transition: .5s ease;
-  backface-visibility: hidden;
 }
 
-.middle {
-  transition: .5s ease;
-  opacity: 0;
+.drop-area {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
+  width: 80%;          /* skala 80% dari container */
+  aspect-ratio: 1 / 1; /* rasio 1x1 */
+  background-color: #fff;
+  border: 2px solid rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-}
-
-.container:hover .image {
-  opacity: 0.3;
-}
-
-.container:hover .middle {
-  opacity: 1;
-}
-
-.text {
-  background-color: #04AA6D;
-  color: white;
+  cursor: pointer;
   font-size: 16px;
-  padding: 16px 32px;
+  color: #333;
+  transition: 0.3s ease;
 }
+
+.drop-area:hover {
+  background-color: #f0f0f0;
+}
+
 </style>
 </head>
 <body>
 
-<h2>Opacity with Box</h2>
-<p>Hover over the image to see the effect.</p>
+<h2>Drop Area Example</h2>
+<p>Seret atau ketuk gambar di dalam area berikut:</p>
 
 <div class="container">
-  <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
-  <div class="middle">
-    <div class="text">John Doe</div>
+  <img src="placeholder.png" alt="Avatar" class="image">
+  <div class="drop-area">
+    Seret atau ketuk disini
   </div>
 </div>
-  
+
 </body>
 </html>
