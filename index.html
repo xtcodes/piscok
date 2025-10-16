@@ -16,42 +16,36 @@ body {
   max-width: 400px;
   margin: auto;
   
-  /* PERBAIKAN CSS: Berikan dimensi pasti pada container */
-  aspect-ratio: 1 / 1; /* Membuat container selalu berbentuk kotak */
+  aspect-ratio: 1 / 1; 
   
-  /* PERBAIKAN CSS: Cursor default saat tidak di-hover/diupload */
   cursor: default; /* Default cursor menjadi default */
   
   overflow: hidden;
-  border: 2px dashed #ccc; /* Border default yang terlihat */
-  border-radius: 8px; /* Pastikan radius konsisten */
-  background-color: #f9f9f9; /* Background default */
-  transition: border-color 0.3s ease; /* Transisi untuk border saat hover */
+  border: 2px dashed #ccc; 
+  border-radius: 8px; 
+  background-color: #f9f9f9; 
+  transition: border-color 0.3s ease; 
 }
 
-/* Hover effect untuk container (hanya border) */
 .container:not(.uploaded):hover {
-  border-color: #04AA6D; /* Warna border berubah saat dihover */
+  border-color: #04AA6D; 
 }
 
-/* Gambar placeholder */
 .image {
   display: block;
   width: 100%;
-  height: 100%; /* Set height 100% agar mengisi container yang sudah kotak */
-  object-fit: contain; /* Jaga aspek rasio dan muat di dalam */
-  pointer-events: none;
+  height: 100%; 
+  object-fit: contain; 
+  pointer-events: none; /* PENTING: gambar tidak bisa diklik */
   transition: opacity 0.3s ease, filter 0.3s ease;
-  background-color: #e0e0e0; /* Fallback background jika placeholder gagal */
+  background-color: #e0e0e0; 
 }
 
-/* Hover effect blur pada image - JANGAN DIHILANGKAN */
 .container:not(.uploaded):hover .image {
   filter: blur(3px);
   opacity: 0.7;
 }
 
-/* Overlay / drop area */
 .middle {
   position: absolute;
   top: 50%;
@@ -59,23 +53,22 @@ body {
   transform: translate(-50%, -50%);
   width: 80%;
   aspect-ratio: 1 / 1;
-  background: rgba(255, 255, 255, 0.5); /* putih transparan */
+  background: rgba(255, 255, 255, 0.5); 
   backdrop-filter: blur(8px);
   border: 2px solid rgba(0,0,0,0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #333;
-  /* PERBAIKAN CSS: Cursor pointer untuk dropArea saat aktif */
-  cursor: pointer;
+  cursor: pointer; /* Cursor pointer untuk dropArea saat aktif */
   
   /* PENTING: dropArea tidak terlihat dan tidak interaktif secara default */
-  pointer-events: none;
+  pointer-events: none; 
   user-select: none;
   opacity: 0;
   visibility: hidden; 
   transition: opacity 0.3s ease, backdrop-filter 0.3s ease, visibility 0.3s ease;
-  z-index: 10; /* Pastikan di atas gambar */
+  z-index: 10; 
 }
 
 /* Kapan dropArea menjadi aktif dan terlihat */
@@ -90,21 +83,20 @@ body {
   border-color: #04AA6D;
 }
 
-/* Canvas untuk gabungkan user + twibbon */
 canvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  display: none; /* tampil setelah upload */
-  z-index: 5; /* Di bawah dropArea tapi di atas image */
+  display: none; 
+  z-index: 5; 
 }
 </style>
 </head>
 <body>
 
-<h2>Upload Gambar Aman</h2>
+<h2>Upload Gambar Aman + Preview Asli</h2>
 <p>Hover di placeholder blur, setelah upload gambar asli tampil dan drop area hilang.</p>
 
 <div class="container" id="container">
@@ -125,40 +117,35 @@ const ctx = canvas.getContext('2d');
 const TWIBBON_URL = "twibbon.png"; 
 const PLACEHOLDER_URL = "placeholder.png"; 
 
-// Fungsi untuk mereset tampilan ke kondisi awal (sebelum upload)
 const resetToInitialState = (errorMessage = null) => {
     if (errorMessage) alert(errorMessage); 
     
-    // Kembalikan placeholder image
     image.src = PLACEHOLDER_URL; 
     image.style.display = 'block';
-    image.style.filter = 'none'; // Pastikan filter dihilangkan
+    image.style.filter = 'none'; 
     image.style.opacity = '1';
 
-    canvas.style.display = 'none'; // Sembunyikan canvas
+    canvas.style.display = 'none'; 
     
-    // Sembunyikan dropArea secara default
+    // Pastikan dropArea tersembunyi dan tidak aktif
     dropArea.classList.remove('active'); 
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
 
-    container.classList.remove('uploaded'); // Hapus status 'uploaded'
-    container.style.cursor = 'default'; // Kembalikan cursor ke default
+    container.classList.remove('uploaded'); 
+    container.style.cursor = 'default'; 
 
     console.warn(`[INFO] Resetting to initial state. Error: ${errorMessage}`);
 };
 
-// Muat placeholder image secara default saat DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
     image.onerror = () => {
         console.warn(`[ERROR] Placeholder image not found at: ${PLACEHOLDER_URL}. Using fallback background.`);
-        image.src = ''; // Jika gagal, set kosong
+        image.src = ''; 
         image.alt = 'Gagal memuat placeholder';
     };
-    image.src = PLACEHOLDER_URL; // Set src setelah onerror
+    image.src = PLACEHOLDER_URL; 
     
-    // PENTING: Jangan aktifkan dropArea di DOMContentLoaded
-    // dropArea akan aktif via mouseenter
     container.classList.remove('uploaded');
     container.style.cursor = 'default';
 });
@@ -177,7 +164,6 @@ function mergeImages(userImgSrc) {
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    // --- Validasi dimensi ---
     if (canvas.width <= 0 || canvas.height <= 0) {
         console.error("Canvas dimensions are invalid:", canvas.width, canvas.height);
         resetToInitialState("Gagal menggambar: Ukuran area tampilan tidak valid.");
@@ -193,8 +179,6 @@ function mergeImages(userImgSrc) {
         resetToInitialState("Gagal menggambar: Gambar twibbon tidak valid atau rusak.");
         return;
     }
-    // --- End Validasi dimensi ---
-
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
@@ -210,7 +194,6 @@ function mergeImages(userImgSrc) {
     canvas.style.display = 'block';
     image.style.display = 'none'; 
     
-    // Sembunyikan dropArea setelah berhasil diupload
     dropArea.style.opacity = '0'; 
     dropArea.style.visibility = 'hidden';
     dropArea.classList.remove('active'); 
@@ -239,33 +222,32 @@ function mergeImages(userImgSrc) {
 
 // --- Event Listeners ---
 
-// PERBAIKAN JS: Mengelola efek hover/blur dan aktivasi dropArea seperti yang diinginkan
+// Mengelola efek hover/blur dan aktivasi dropArea
 container.addEventListener('mouseenter', () => {
     if (!container.classList.contains('uploaded')) {
-        dropArea.classList.add('active'); // Aktifkan dropArea
-        container.style.cursor = 'pointer'; // Ganti cursor saat hover
+        dropArea.classList.add('active'); 
+        container.style.cursor = 'pointer'; 
     }
 });
 
 container.addEventListener('mouseleave', () => {
-    // Sembunyikan dropArea saat mouse keluar, kecuali jika sedang drag
     if (!container.classList.contains('uploaded') && !dropArea.classList.contains('dragover')) {
-        dropArea.classList.remove('active'); // Non-aktifkan dropArea
-        container.style.cursor = 'default'; // Kembalikan cursor default
+        dropArea.classList.remove('active'); 
+        container.style.cursor = 'default'; 
     }
 });
 
-// Event click pada container akan diteruskan ke dropArea jika active
-container.addEventListener('click', (e) => {
-    if (!container.classList.contains('uploaded') && dropArea.classList.contains('active')) {
-        fileInput.click();
-    }
-});
+// PENTING: Menghapus event listener ini agar klik pada container (di luar dropArea) tidak memicu upload
+// container.addEventListener('click', (e) => {
+//     if (!container.classList.contains('uploaded') && dropArea.classList.contains('active')) {
+//         fileInput.click();
+//     }
+// });
 
 
 // klik drop area → file dialog
 dropArea.addEventListener('click', e => {
-  e.stopPropagation(); // Penting untuk mencegah event click container juga
+  e.stopPropagation(); // Penting: memastikan hanya dropArea yang merespons klik
   fileInput.click();
 });
 
@@ -275,7 +257,7 @@ fileInput.addEventListener('change', e => {
     const reader = new FileReader();
     reader.onload = ev => mergeImages(ev.target.result);
     reader.readAsDataURL(e.target.files[0]);
-    // Sembunyikan dropArea setelah file dipilih
+    
     dropArea.classList.remove('active');
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
@@ -294,9 +276,9 @@ dropArea.addEventListener('dragover', e => {
 
 dropArea.addEventListener('dragleave', () => {
   dropArea.classList.remove('dragover');
-  // Sembunyikan dropArea lagi setelah drag leave, kecuali jika ingin tetap terlihat
-  dropArea.classList.remove('active');
-  container.style.cursor = 'default'; // Kembalikan cursor
+  // Sembunyikan dropArea lagi setelah drag leave
+  dropArea.classList.remove('active'); // ini akan memicu transition kembali ke opacity 0
+  container.style.cursor = 'default'; 
 });
 
 dropArea.addEventListener('drop', e => {
@@ -306,7 +288,7 @@ dropArea.addEventListener('drop', e => {
     const reader = new FileReader();
     reader.onload = ev => mergeImages(ev.target.result);
     reader.readAsDataURL(e.dataTransfer.files[0]);
-    // Sembunyikan dropArea setelah file di-drop
+    
     dropArea.classList.remove('active');
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
