@@ -108,7 +108,7 @@ p {
   z-index: 10; 
 }
 
-/* FIX: Pastikan dropArea aktif di awal untuk menampilkan tulisan upload */
+/* Tampilkan dropArea hanya jika memiliki kelas active (diatur oleh JS) */
 .middle.active {
   pointer-events: auto;
   opacity: 1;
@@ -199,7 +199,7 @@ canvas:active {
 
         <div class="container" id="container">
           <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Upload Gambar Anda" class="image"> 
-          <div class="middle active" id="dropArea">Klik atau seret disini</div>
+          <div class="middle" id="dropArea">Klik atau seret disini</div>
           <canvas id="canvas"></canvas>
         </div>
 
@@ -336,7 +336,7 @@ const resetToInitialState = (errorMessage = null) => {
     canvas.style.display = 'none'; 
     container.classList.remove('finished');
     
-    // FIX: Saat reset, kembalikan tampilan dropArea seperti di awal
+    // FIX PENTING: Atur dropArea agar terlihat saat reset/inisialisasi
     dropArea.classList.add('active'); 
     dropArea.style.opacity = '1';
     dropArea.style.visibility = 'visible';
@@ -496,20 +496,13 @@ async function shareImage() {
 // --- Event Listeners Awal ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // FIX: Tidak perlu memanggil resetToInitialState karena dropArea sudah disetel 'active' di HTML
-    // dan css sudah mengurus tampilan initial
-    
-    container.classList.remove('uploaded');
-    container.style.cursor = 'default';
-    
-    downloadButton.style.display = 'none';
-    shareButton.style.display = 'none';
+    // PANGGIL FUNGSI INI DI AWAL UNTUK MENGATUR TAMPILAN PLACEHOLDER YANG BENAR
+    resetToInitialState();
 });
 
 // Mengelola visual drop area saat mouse hover (efek blur)
 container.addEventListener('mouseenter', () => {
     if (!container.classList.contains('uploaded')) {
-        // dropArea sudah aktif di awal, hanya tambahkan visual hover jika belum diupload
         container.style.cursor = 'pointer'; 
     }
 });
@@ -538,7 +531,7 @@ fileInput.addEventListener('change', e => {
 // drag & drop events
 dropArea.addEventListener('dragover', e => {
   e.preventDefault(); 
-  dropArea.classList.add('active'); // Pastikan tetap aktif
+  dropArea.classList.add('active'); 
   dropArea.classList.add('dragover');
 });
 
