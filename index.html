@@ -38,8 +38,7 @@ body {
   align-items: center;
   justify-content: center;
   color: #333;
-  cursor: default; /* jangan langsung klik */
-  flex-direction: column;
+  cursor: default; /* klik tidak memicu upload */
 }
 
 .container:hover .image {
@@ -54,30 +53,16 @@ body {
   background-color: #f0f0f0;
   border-color: #04AA6D;
 }
-
-.upload-btn {
-  margin-top: 10px;
-  padding: 8px 16px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: #04AA6D;
-  color: white;
-  border: none;
-  border-radius: 4px;
-}
 </style>
 </head>
 <body>
 
-<h2>Drop Area dengan Drag & Klik</h2>
-<p>Seret gambar ke area atau gunakan tombol di tengah untuk upload.</p>
+<h2>Drop Area Hanya Drag & Drop</h2>
+<p>Seret gambar ke area di bawah. Klik tidak memicu upload.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
-  <div class="middle" id="dropArea">
-    Seret atau ketuk disini
-    <button class="upload-btn" id="uploadBtn">Pilih Gambar</button>
-  </div>
+  <div class="middle" id="dropArea">Seret atau ketuk disini</div>
 </div>
 
 <input type="file" id="fileInput" style="display:none" accept="image/*">
@@ -85,28 +70,9 @@ body {
 <script>
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
-const uploadBtn = document.getElementById('uploadBtn');
 const image = document.querySelector('.image');
 
-// klik tombol -> buka file dialog
-uploadBtn.addEventListener('click', (e) => {
-  e.stopPropagation(); // mencegah klik bubble ke dropArea
-  fileInput.click();
-});
-
-// pilih file melalui dialog
-fileInput.addEventListener('change', (e) => {
-  if (e.target.files && e.target.files[0]) {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      image.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-});
-
-// drag & drop
+// hanya drag & drop, klik area tidak melakukan apa-apa
 dropArea.addEventListener('dragover', (e) => {
   e.preventDefault();
   dropArea.classList.add('dragover');
