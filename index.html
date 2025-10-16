@@ -12,6 +12,7 @@ body {
 .container {
   position: relative;
   width: 100%;
+  max-width: 400px;
   margin: auto;
 }
 
@@ -21,42 +22,67 @@ body {
   height: auto;
 }
 
+/* Overlay placeholder */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.2);
+  display: none; /* tersembunyi awal */
+  z-index: 10;
+}
+
+/* Drop area */
 .drop-area {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 80%;          /* skala 80% dari container */
-  aspect-ratio: 1 / 1; /* rasio 1x1 */
+  width: 80%;
+  aspect-ratio: 1 / 1;
   background-color: #fff;
   border: 2px solid rgba(0,0,0,0.5);
-  display: flex;
+  display: none; /* tersembunyi awal */
   align-items: center;
   justify-content: center;
   text-align: center;
   cursor: pointer;
   font-size: 16px;
   color: #333;
-  transition: 0.3s ease;
+  z-index: 20;
 }
 
-.drop-area:hover {
-  background-color: #f0f0f0;
+/* ketika overlay aktif, drop area muncul */
+.container.show-drop .overlay {
+  display: block;
 }
 
+.container.show-drop .drop-area {
+  display: flex;
+}
 </style>
 </head>
 <body>
 
 <h2>Drop Area Example</h2>
-<p>Seret atau ketuk gambar di dalam area berikut:</p>
+<p>Overlay muncul dulu, baru drop area.</p>
 
-<div class="container">
+<div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
-  <div class="drop-area">
-    Seret atau ketuk disini
-  </div>
+  <div class="overlay"></div>
+  <div class="drop-area">Seret atau ketuk disini</div>
 </div>
+
+<script>
+const container = document.getElementById('container');
+
+// simulasi overlay aktif (misal setelah klik gambar)
+container.addEventListener('click', () => {
+  container.classList.toggle('show-drop');
+});
+</script>
 
 </body>
 </html>
