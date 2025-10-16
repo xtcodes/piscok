@@ -15,33 +15,37 @@ body {
   width: 100%;
   max-width: 400px;
   margin: auto;
+  
   /* PERBAIKAN CSS: Berikan dimensi pasti pada container */
-  /* Ini adalah kunci agar canvas punya tinggi untuk digambar */
   aspect-ratio: 1 / 1; /* Membuat container selalu berbentuk kotak */
   
-  /* PERBAIKAN CSS: Ubah cursor agar bisa interaksi */
-  cursor: pointer; /* Default cursor menjadi pointer agar bisa diklik/hover */
+  /* PERBAIKAN CSS: Cursor default saat tidak di-hover/diupload */
+  cursor: default; /* Default cursor menjadi default */
   
   overflow: hidden;
-  /* Optional: Tambahkan border awal agar ada visual feedback */
-  border: 2px dashed #ccc;
+  border: 2px dashed #ccc; /* Border default yang terlihat */
   border-radius: 8px; /* Pastikan radius konsisten */
   background-color: #f9f9f9; /* Background default */
+  transition: border-color 0.3s ease; /* Transisi untuk border saat hover */
+}
+
+/* Hover effect untuk container (hanya border) */
+.container:not(.uploaded):hover {
+  border-color: #04AA6D; /* Warna border berubah saat dihover */
 }
 
 /* Gambar placeholder */
 .image {
   display: block;
   width: 100%;
-  /* PERBAIKAN CSS: Set height 100% agar mengisi container yang sudah kotak */
-  height: 100%; 
+  height: 100%; /* Set height 100% agar mengisi container yang sudah kotak */
   object-fit: contain; /* Jaga aspek rasio dan muat di dalam */
   pointer-events: none;
   transition: opacity 0.3s ease, filter 0.3s ease;
   background-color: #e0e0e0; /* Fallback background jika placeholder gagal */
 }
 
-/* Hover effect hanya jika drop area tidak aktif */
+/* Hover effect blur pada image - JANGAN DIHILANGKAN */
 .container:not(.uploaded):hover .image {
   filter: blur(3px);
   opacity: 0.7;
@@ -62,19 +66,19 @@ body {
   align-items: center;
   justify-content: center;
   color: #333;
-  /* PERBAIKAN CSS: Cursor pointer untuk dropArea */
+  /* PERBAIKAN CSS: Cursor pointer untuk dropArea saat aktif */
   cursor: pointer;
   
-  /* PERBAIKAN CSS: Default pointer-events diubah saat aktif */
-  pointer-events: none; /* Default tetap non-interaktif */
+  /* PENTING: dropArea tidak terlihat dan tidak interaktif secara default */
+  pointer-events: none;
   user-select: none;
   opacity: 0;
-  visibility: hidden; /* Tambahkan visibility agar tidak mengganggu interaksi awal */
+  visibility: hidden; 
   transition: opacity 0.3s ease, backdrop-filter 0.3s ease, visibility 0.3s ease;
   z-index: 10; /* Pastikan di atas gambar */
 }
 
-/* PERBAIKAN CSS: Drop area aktif saat kelas .active diterapkan */
+/* Kapan dropArea menjadi aktif dan terlihat */
 .middle.active {
   pointer-events: auto; /* Bisa diinteraksi */
   opacity: 1;
@@ -100,11 +104,10 @@ canvas {
 </head>
 <body>
 
-<h2>Upload Gambar Aman + Preview Asli</h2>
+<h2>Upload Gambar Aman</h2>
 <p>Hover di placeholder blur, setelah upload gambar asli tampil dan drop area hilang.</p>
 
 <div class="container" id="container">
-  <!-- PERBAIKAN HTML: img src awal diatur di JS untuk penanganan error yang lebih baik -->
   <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Upload Gambar Anda" class="image"> 
   <div class="middle" id="dropArea">Klik atau seret disini</div>
   <canvas id="canvas"></canvas>
@@ -119,14 +122,12 @@ const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const TWIBBON_URL = "twibbon.png"; // pastikan ada di folder sama, atau path benar
-const PLACEHOLDER_URL = "placeholder.png"; // Tambahkan path untuk placeholder
-
-// --- PERBAIKAN JAVASCRIPT ---
+const TWIBBON_URL = "twibbon.png"; 
+const PLACEHOLDER_URL = "placeholder.png"; 
 
 // Fungsi untuk mereset tampilan ke kondisi awal (sebelum upload)
 const resetToInitialState = (errorMessage = null) => {
-    if (errorMessage) alert(errorMessage); // Tampilkan alert jika ada pesan error
+    if (errorMessage) alert(errorMessage); 
     
     // Kembalikan placeholder image
     image.src = PLACEHOLDER_URL; 
@@ -136,14 +137,14 @@ const resetToInitialState = (errorMessage = null) => {
 
     canvas.style.display = 'none'; // Sembunyikan canvas
     
-    // Pastikan dropArea aktif dan terlihat
-    dropArea.classList.add('active'); 
-    dropArea.style.opacity = '1';
-    dropArea.style.visibility = 'visible';
+    // Sembunyikan dropArea secara default
+    dropArea.classList.remove('active'); 
+    dropArea.style.opacity = '0';
+    dropArea.style.visibility = 'hidden';
 
     container.classList.remove('uploaded'); // Hapus status 'uploaded'
-    container.style.cursor = 'pointer'; // Kembalikan cursor ke pointer
-    
+    container.style.cursor = 'default'; // Kembalikan cursor ke default
+
     console.warn(`[INFO] Resetting to initial state. Error: ${errorMessage}`);
 };
 
@@ -151,31 +152,27 @@ const resetToInitialState = (errorMessage = null) => {
 document.addEventListener('DOMContentLoaded', () => {
     image.onerror = () => {
         console.warn(`[ERROR] Placeholder image not found at: ${PLACEHOLDER_URL}. Using fallback background.`);
-        image.src = ''; // Jika gagal, set kosong agar tidak menampilkan ikon rusak
+        image.src = ''; // Jika gagal, set kosong
         image.alt = 'Gagal memuat placeholder';
-        // Biarkan dropArea tetap aktif sebagai satu-satunya interaksi
     };
     image.src = PLACEHOLDER_URL; // Set src setelah onerror
     
-    // Inisialisasi awal agar dropArea aktif saat pertama kali dimuat
-    // agar bisa langsung interaksi tanpa hover
-    dropArea.classList.add('active');
-    dropArea.style.opacity = '1';
-    dropArea.style.visibility = 'visible';
-    container.style.cursor = 'pointer'; // Pastikan cursor default adalah pointer
+    // PENTING: Jangan aktifkan dropArea di DOMContentLoaded
+    // dropArea akan aktif via mouseenter
+    container.classList.remove('uploaded');
+    container.style.cursor = 'default';
 });
 
 
 function mergeImages(userImgSrc) {
   const userImg = new Image();
   const twibbon = new Image();
-  let imagesLoaded = 0; // Hitung gambar yang sudah dimuat
+  let imagesLoaded = 0; 
 
   function drawIfReady() {
     imagesLoaded++;
-    if (imagesLoaded < 2) return; // Tunggu sampai kedua gambar selesai dimuat
+    if (imagesLoaded < 2) return; 
 
-    // ukur canvas sesuai container
     const rect = container.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
@@ -199,9 +196,8 @@ function mergeImages(userImgSrc) {
     // --- End Validasi dimensi ---
 
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Bersihkan canvas sebelumnya
+    ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
-    // gambar user proporsional & center
     const scale = Math.min(canvas.width / userImg.width, canvas.height / userImg.height);
     const userScaledWidth = userImg.width * scale;
     const userScaledHeight = userImg.height * scale;
@@ -209,23 +205,20 @@ function mergeImages(userImgSrc) {
     const userY = (canvas.height - userScaledHeight) / 2;
     ctx.drawImage(userImg, userX, userY, userScaledWidth, userScaledHeight);
 
-    // gambar twibbon di atas user
     ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
 
-    // tampilkan canvas, sembunyikan placeholder & drop area
     canvas.style.display = 'block';
-    image.style.display = 'none'; // Sembunyikan elemen <img>
+    image.style.display = 'none'; 
     
     // Sembunyikan dropArea setelah berhasil diupload
     dropArea.style.opacity = '0'; 
     dropArea.style.visibility = 'hidden';
-    dropArea.classList.remove('active'); // Hapus kelas 'active'
+    dropArea.classList.remove('active'); 
     
-    container.classList.add('uploaded'); // Tandai container sudah diupload
-    container.style.cursor = 'default'; // Kembalikan cursor normal setelah upload
+    container.classList.add('uploaded'); 
+    container.style.cursor = 'default'; 
   }
 
-  // pastikan crossOrigin supaya canvas bisa draw image tanpa masalah
   userImg.crossOrigin = "anonymous";
   twibbon.crossOrigin = "anonymous";
 
@@ -246,29 +239,33 @@ function mergeImages(userImgSrc) {
 
 // --- Event Listeners ---
 
-// PERBAIKAN JS: Event listener untuk mengelola efek hover/blur dan aktivasi dropArea
+// PERBAIKAN JS: Mengelola efek hover/blur dan aktivasi dropArea seperti yang diinginkan
 container.addEventListener('mouseenter', () => {
     if (!container.classList.contains('uploaded')) {
-        // dropArea sudah active by default, ini hanya untuk memastikan
-        dropArea.classList.add('active'); 
-        dropArea.style.opacity = '1';
-        dropArea.style.visibility = 'visible';
+        dropArea.classList.add('active'); // Aktifkan dropArea
+        container.style.cursor = 'pointer'; // Ganti cursor saat hover
     }
 });
 
 container.addEventListener('mouseleave', () => {
     // Sembunyikan dropArea saat mouse keluar, kecuali jika sedang drag
     if (!container.classList.contains('uploaded') && !dropArea.classList.contains('dragover')) {
-        dropArea.classList.remove('active');
-        dropArea.style.opacity = '0';
-        dropArea.style.visibility = 'hidden';
+        dropArea.classList.remove('active'); // Non-aktifkan dropArea
+        container.style.cursor = 'default'; // Kembalikan cursor default
+    }
+});
+
+// Event click pada container akan diteruskan ke dropArea jika active
+container.addEventListener('click', (e) => {
+    if (!container.classList.contains('uploaded') && dropArea.classList.contains('active')) {
+        fileInput.click();
     }
 });
 
 
 // klik drop area → file dialog
 dropArea.addEventListener('click', e => {
-  e.stopPropagation();
+  e.stopPropagation(); // Penting untuk mencegah event click container juga
   fileInput.click();
 });
 
@@ -287,26 +284,23 @@ fileInput.addEventListener('change', e => {
 
 // drag & drop
 dropArea.addEventListener('dragover', e => {
-  e.preventDefault(); // Penting untuk mengizinkan drop
-  // Pastikan dropArea aktif saat dragover
+  e.preventDefault(); 
+  // Pastikan dropArea aktif saat dragover (ini override mouseleave)
   if (!dropArea.classList.contains('active')) {
       dropArea.classList.add('active');
-      dropArea.style.opacity = '1';
-      dropArea.style.visibility = 'visible';
   }
   dropArea.classList.add('dragover');
 });
 
 dropArea.addEventListener('dragleave', () => {
   dropArea.classList.remove('dragover');
-  // Optional: sembunyikan dropArea jika user keluar tanpa drop
-  // dropArea.classList.remove('active');
-  // dropArea.style.opacity = '0';
-  // dropArea.style.visibility = 'hidden';
+  // Sembunyikan dropArea lagi setelah drag leave, kecuali jika ingin tetap terlihat
+  dropArea.classList.remove('active');
+  container.style.cursor = 'default'; // Kembalikan cursor
 });
 
 dropArea.addEventListener('drop', e => {
-  e.preventDefault(); // Penting untuk mengizinkan drop
+  e.preventDefault(); 
   dropArea.classList.remove('dragover');
   if (e.dataTransfer.files && e.dataTransfer.files[0]) {
     const reader = new FileReader();
