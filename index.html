@@ -16,14 +16,16 @@ body {
   margin: auto;
 }
 
+/* Gambar terlihat tapi klik diblok total */
 .image {
   display: block;
   width: 100%;
   height: auto;
   transition: 0.5s ease;
-  pointer-events: none; /* klik di gambar tidak memicu upload */
+  pointer-events: none; /* klik di placeholder TIDAK TERBACA */
 }
 
+/* overlay di tengah */
 .middle {
   transition: 0.5s ease;
   opacity: 0;
@@ -41,17 +43,17 @@ body {
   justify-content: center;
   color: #333;
   cursor: pointer;
-  pointer-events: none; /* nonaktif sebelum overlay muncul */
+  pointer-events: none; /* nonaktif awal */
   user-select: none;
 }
 
 .container:hover .image {
-  opacity: 0.3;
+  opacity: 0.3; /* visual hover */
 }
 
 .container:hover .middle {
-  opacity: 1;
-  pointer-events: auto; /* pointer-events aktif saat hover */
+  opacity: 1; /* overlay muncul */
+  pointer-events: auto; /* aktifkan klik overlay */
 }
 
 .middle.dragover {
@@ -63,9 +65,9 @@ body {
 <body>
 
 <h2>Drop Area Aman</h2>
-<p>Klik di gambar tidak akan memicu upload. Upload hanya bisa melalui overlay yang muncul.</p>
+<p>Klik di gambar atau placeholder tidak memicu upload. Klik hanya bisa di overlay.</p>
 
-<div class="container" id="container">
+<div class="container">
   <img src="placeholder.png" alt="Avatar" class="image">
   <div class="middle" id="dropArea">Klik atau seret disini</div>
 </div>
@@ -77,8 +79,9 @@ const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 
-// Klik overlay aktif
-dropArea.addEventListener('click', () => {
+// Klik overlay untuk upload
+dropArea.addEventListener('click', (e) => {
+  e.stopPropagation(); // **blok bubbling ke container**
   fileInput.click();
 });
 
@@ -94,7 +97,7 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// Drag & drop hanya aktif di overlay
+// Drag & drop overlay
 dropArea.addEventListener('dragover', (e) => {
   e.preventDefault();
   dropArea.classList.add('dragover');
