@@ -14,24 +14,28 @@ body {
   width: 100%;
   max-width: 400px;
   margin: auto;
-  cursor: pointer; /* klik pertama untuk overlay */
+  cursor: pointer; /* klik pertama untuk memunculkan overlay */
+  overflow: hidden; /* untuk efek blur */
 }
 
-/* Gambar placeholder */
+/* Gambar terlihat tapi klik langsung tidak memicu upload */
 .image {
   display: block;
   width: 100%;
   height: auto;
-  pointer-events: none; /* klik tidak memicu upload */
-  transition: opacity 0.3s ease;
+  pointer-events: none; /* klik di placeholder TIDAK TERBACA */
+  transition: 0.5s ease, filter 0.3s ease;
 }
 
-/* Overlay */
+/* Overlay di tengah */
 .middle {
+  transition: 0.5s ease;
+  opacity: 0;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  text-align: center;
   width: 80%;
   aspect-ratio: 1 / 1;
   background-color: rgba(255,255,255,0.95);
@@ -41,26 +45,24 @@ body {
   justify-content: center;
   color: #333;
   cursor: pointer;
-  pointer-events: none; /* aktif hanya saat overlay aktif */
+  pointer-events: none; /* pointer-events aktif hanya saat overlay aktif */
   user-select: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
 }
 
-/* Hover desktop */
-@media (hover: hover) {
-  .container:hover .image {
-    opacity: 0.3; /* image transparan saat hover */
-  }
-  .container:hover .middle {
-    opacity: 1; /* overlay muncul visual */
-  }
+/* Hover effect: warna overlay + blur image */
+.container:hover .image {
+  filter: blur(3px); /* blur efek */
+}
+
+.container:hover .middle {
+  opacity: 1;
+  background-color: rgba(0, 150, 255, 0.2); /* warna overlay saat hover */
 }
 
 /* Overlay aktif (klik) */
 .middle.active {
-  pointer-events: auto;
   opacity: 1;
+  pointer-events: auto; /* klik overlay aktif */
 }
 
 .middle.dragover {
@@ -71,8 +73,8 @@ body {
 </head>
 <body>
 
-<h2>Upload Gambar Aman + Hover</h2>
-<p>Hover visual untuk desktop, klik di placeholder untuk menampilkan overlay. Upload hanya di drop area.</p>
+<h2>Upload Gambar Aman + Hover Efek</h2>
+<p>Klik di placeholder untuk menampilkan overlay. Upload hanya bisa melalui overlay. Hover efek blur + warna.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -87,14 +89,14 @@ const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 
-// Klik pertama di placeholder → aktifkan overlay
+// Klik pertama di placeholder → tampilkan overlay
 container.addEventListener('click', () => {
   dropArea.classList.add('active');
 });
 
 // Klik di overlay → buka file dialog
 dropArea.addEventListener('click', (e) => {
-  e.stopPropagation();
+  e.stopPropagation(); // cegah bubbling
   fileInput.click();
 });
 
@@ -112,7 +114,6 @@ fileInput.addEventListener('change', (e) => {
 
 // Drag & drop overlay
 dropArea.addEventListener('dragover', (e) => {
-  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.add('dragover');
 });
@@ -122,7 +123,6 @@ dropArea.addEventListener('dragleave', () => {
 });
 
 dropArea.addEventListener('drop', (e) => {
-  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.remove('dragover');
   const files = e.dataTransfer.files;
