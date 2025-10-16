@@ -96,7 +96,6 @@ const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-
 const TWIBBON_URL = "twibbon.png"; // pastikan ada di folder yang sama
 
 function mergeImages(userImgSrc) {
@@ -111,9 +110,12 @@ function mergeImages(userImgSrc) {
     // pastikan canvas pixel sesuai container
     const rect = container.getBoundingClientRect();
     canvas.width = rect.width;
-    canvas.height = rect.width; // 1:1 ratio
+    canvas.height = rect.height;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // gambar twibbon full canvas
+    ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
 
     // gambar user proporsional & center
     const scale = Math.min(canvas.width / userImg.width, canvas.height / userImg.height);
@@ -121,12 +123,9 @@ function mergeImages(userImgSrc) {
     const y = (canvas.height - userImg.height * scale) / 2;
     ctx.drawImage(userImg, x, y, userImg.width * scale, userImg.height * scale);
 
-    // gambar twibbon full canvas
-    ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
-
     // tampilkan canvas, sembunyikan placeholder
     canvas.style.display = 'block';
-    image.style.display = 'none';
+    image.getElementsByTagName('img')[0].style.display = 'none';
     dropArea.style.display = 'none';
     container.classList.add('uploaded');
   }
@@ -164,7 +163,9 @@ dropArea.addEventListener('dragover', e => {
   e.preventDefault();
   dropArea.classList.add('dragover');
 });
+
 dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+
 dropArea.addEventListener('drop', e => {
   if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
@@ -175,7 +176,6 @@ dropArea.addEventListener('drop', e => {
     reader.readAsDataURL(e.dataTransfer.files[0]);
   }
 });
-
 </script>      
 
 </body>
