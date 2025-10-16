@@ -14,14 +14,15 @@ body {
   width: 100%;
   max-width: 400px;
   margin: auto;
+  cursor: pointer; /* klik pertama untuk memunculkan overlay */
 }
 
-/* Gambar tetap terlihat tapi klik diblok total */
+/* Gambar terlihat tapi klik langsung tidak memicu upload */
 .image {
   display: block;
   width: 100%;
   height: auto;
-  pointer-events: none; /* klik di placeholder tidak memicu upload */
+  pointer-events: none; /* klik di placeholder TIDAK TERBACA */
   transition: 0.5s ease;
 }
 
@@ -49,7 +50,7 @@ body {
 
 .middle.active {
   opacity: 1;
-  pointer-events: auto; /* aktifkan klik drop area */
+  pointer-events: auto; /* klik overlay aktif */
 }
 
 .middle.dragover {
@@ -60,36 +61,34 @@ body {
 </head>
 <body>
 
-<h2>Drop Area Aman</h2>
-<p>Klik di placeholder tidak memicu upload. Upload hanya bisa melalui drop area.</p>
+<h2>Upload Gambar Aman</h2>
+<p>Klik di placeholder pertama kali untuk menampilkan overlay. Upload hanya bisa melalui overlay.</p>
 
-<div class="container">
+<div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
   <div class="middle" id="dropArea">Klik atau seret disini</div>
 </div>
 
 <input type="file" id="fileInput" style="display:none" accept="image/*">
-<button id="showOverlayBtn">Tampilkan Overlay</button>
 
 <script>
+const container = document.getElementById('container');
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
-const showOverlayBtn = document.getElementById('showOverlayBtn');
 
-// Tombol untuk menampilkan overlay secara manual
-showOverlayBtn.addEventListener('click', () => {
+// Klik pertama di placeholder → tampilkan overlay
+container.addEventListener('click', () => {
   dropArea.classList.add('active');
 });
 
-// Klik hanya di drop area
+// Klik di overlay → buka file dialog
 dropArea.addEventListener('click', (e) => {
   e.stopPropagation(); // cegah bubbling ke container
-  if (!dropArea.classList.contains('active')) return; // aman
   fileInput.click();
 });
 
-// Pilih file
+// Upload file
 fileInput.addEventListener('change', (e) => {
   if (e.target.files && e.target.files[0]) {
     const file = e.target.files[0];
@@ -101,9 +100,8 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// Drag & drop hanya aktif di drop area
+// Drag & drop overlay
 dropArea.addEventListener('dragover', (e) => {
-  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.add('dragover');
 });
@@ -113,7 +111,6 @@ dropArea.addEventListener('dragleave', () => {
 });
 
 dropArea.addEventListener('drop', (e) => {
-  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.remove('dragover');
   const files = e.dataTransfer.files;
