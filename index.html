@@ -5,7 +5,7 @@
 <title>Twibbon Uploader</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-/* --- KODE CSS ASLI ANDA --- */
+/* --- KODE CSS ASLI ANDA (Dikurangi style opacity yang salah) --- */
 body {
   font-family: Arial, sans-serif;
   padding: 0; 
@@ -128,13 +128,7 @@ canvas {
   z-index: 5; 
   cursor: grab;
   touch-action: none;
-  /* Tambahkan transisi untuk efek halus */
-  transition: opacity 0.15s ease; 
-}
-
-/* --- CSS BARU: Twibbon menjadi transparan saat interaksi aktif --- */
-.container.interactive canvas {
-  opacity: 0.4; /* Opacity saat digeser/di-zoom */
+  /* Hapus opacity dari CSS */
 }
 
 canvas:active {
@@ -221,7 +215,7 @@ canvas:active {
 <input type="file" id="fileInput" style="display:none" accept="image/*">
 
 <script>
-// --- KODE JAVASCRIPT ASLI ANDA ---
+// --- KODE JAVASCRIPT UTAMA ---
 const container = document.getElementById('container');
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
@@ -243,24 +237,28 @@ let drawState = {
     initialScale: 1
 };
 
+// Variabel baru untuk mengontrol transparansi twibbon
+let twibbonOpacity = 1.0; 
+const ACTIVE_OPACITY = 0.4; // Transparansi saat interaksi (0.4)
+const NORMAL_OPACITY = 1.0; // Transparansi normal (1.0)
+
 let isDragging = false;
 let lastX = 0;
 let lastY = 0;
 let pointers = {};
 
-// --- FUNGSI BARU: Mengelola class interaksi (transparansi) ---
+// --- FUNGSI BARU: Mengatur opacity twibbon dan me-render ulang ---
 function setInteractionMode(isActive) {
-    if (isActive) {
-        container.classList.add('interactive');
-    } else {
-        // Hanya hapus jika sudah selesai interaksi DAN belum di-download (finished)
-        if (!container.classList.contains('finished')) {
-            container.classList.remove('interactive');
-        }
+    if (container.classList.contains('finished')) return; // Jangan ubah setelah download
+
+    const newOpacity = isActive ? ACTIVE_OPACITY : NORMAL_OPACITY;
+    if (twibbonOpacity !== newOpacity) {
+        twibbonOpacity = newOpacity;
+        renderCanvas(); // Render ulang untuk menerapkan opacity baru
     }
 }
 
-
+// --- FUNGSI UTAMA GAMBAR (RENDER) ---
 function renderCanvas() {
     if (!userImage || !twibbonImage || canvas.width <= 0 || canvas.height <= 0) return;
 
@@ -269,6 +267,7 @@ function renderCanvas() {
     const userScaledWidth = userImage.width * drawState.initialScale * drawState.scale;
     const userScaledHeight = userImage.height * drawState.initialScale * drawState.scale;
 
+    // 1. Gambar Gambar User (Latar Belakang)
     ctx.save();
     ctx.translate(canvas.width / 2 + drawState.x, canvas.height / 2 + drawState.y);
     ctx.drawImage(
@@ -280,15 +279,20 @@ function renderCanvas() {
     );
     ctx.restore();
 
+    // 2. Gambar Twibbon (Lapisan Atas) dengan Opacity yang diatur
+    ctx.globalAlpha = twibbonOpacity; // <--- INI PENTING!
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1.0; // Reset alpha agar tidak mempengaruhi gambar berikutnya
 }
 
+// --- FUNGSI PENGELOLAAN STATE AWAL ---
 const resetToInitialState = (errorMessage = null) => {
     if (errorMessage) alert(errorMessage); 
     
     userImage = null;
     twibbonImage = null;
     drawState = { x: 0, y: 0, scale: 1, rotation: 0, initialScale: 1 };
+    twibbonOpacity = NORMAL_OPACITY; // Reset opacity
     
     image.src = PLACEHOLDER_URL; 
     image.style.display = 'block';
@@ -297,7 +301,6 @@ const resetToInitialState = (errorMessage = null) => {
 
     canvas.style.display = 'none'; 
     container.classList.remove('finished');
-    container.classList.remove('interactive'); // Reset class
     dropArea.classList.remove('active'); 
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
@@ -338,7 +341,6 @@ function mergeImages(userImgSrc) {
     dropArea.classList.remove('active'); 
     container.classList.add('uploaded'); 
     container.classList.remove('finished');
-    container.classList.remove('interactive'); // Reset class
     container.style.cursor = 'default'; 
     
     downloadButton.style.display = 'block';
@@ -346,6 +348,7 @@ function mergeImages(userImgSrc) {
 
     downloadButton.textContent = 'Unduh Gambar';
     downloadButton.disabled = false;
+    twibbonOpacity = NORMAL_OPACITY; // Pastikan normal saat awal
 
     renderCanvas();
   }
@@ -361,6 +364,8 @@ function mergeImages(userImgSrc) {
   twibbonImage.onerror = () => resetToInitialState('Gagal memuat twibbon! Pastikan file "twibbon.png" ada dan path-nya benar.');
   twibbonImage.src = TWIBBON_URL;
 }
+
+// --- FUNGSI DOWNLOAD & SHARE (DIUBAH UNTUK MENERAPKAN OPACITY NORMAL) ---
 
 function getFinalCanvasBlob(callback) {
     if (!container.classList.contains('uploaded')) return;
@@ -390,6 +395,8 @@ function getFinalCanvasBlob(callback) {
     );
     finalCtx.restore();
 
+    // Pastikan final canvas digambar dengan opacity normal (1.0)
+    finalCtx.globalAlpha = 1.0; 
     finalCtx.drawImage(twibbonImage, 0, 0, finalSize, finalSize);
 
     finalCanvas.toBlob(callback, 'image/png');
@@ -400,6 +407,11 @@ async function shareImage() {
         alert("Mohon upload dan edit gambar Anda terlebih dahulu.");
         return;
     }
+    
+    // Set opacity ke normal sebelum share
+    const oldOpacity = twibbonOpacity;
+    twibbonOpacity = NORMAL_OPACITY; 
+    renderCanvas(); // Update tampilan
 
     if (navigator.canShare && navigator.canShare({ files: [new File([""], "image.png", { type: "image/png" })] })) {
         
@@ -418,6 +430,12 @@ async function shareImage() {
                 if (error.name !== 'AbortError') {
                      alert(`Gagal berbagi gambar. Error: ${error.message}`);
                 }
+            } finally {
+                // Kembalikan opacity setelah share selesai/gagal
+                if (!container.classList.contains('finished')) {
+                    twibbonOpacity = oldOpacity;
+                    renderCanvas();
+                }
             }
         });
 
@@ -433,10 +451,21 @@ async function shareImage() {
              if (error.name !== 'AbortError') {
                  alert(`Gagal berbagi link. Error: ${error.message}`);
              }
+        } finally {
+             // Kembalikan opacity setelah share selesai/gagal
+             if (!container.classList.contains('finished')) {
+                 twibbonOpacity = oldOpacity;
+                 renderCanvas();
+             }
         }
     } 
     else {
         alert("Browser Anda tidak mendukung fitur berbagi. Silakan unduh gambar dan bagikan secara manual.");
+         // Kembalikan opacity setelah alert
+         if (!container.classList.contains('finished')) {
+             twibbonOpacity = oldOpacity;
+             renderCanvas();
+         }
     }
 }
 
@@ -527,9 +556,10 @@ downloadButton.addEventListener('click', () => {
     downloadButton.textContent = 'Diproses...';
     downloadButton.disabled = true; 
     
-    // PENTING: Tambahkan class 'finished' untuk nonaktifkan interaksi permanen
+    // Nonaktifkan interaksi permanen & set opacity ke normal
     container.classList.add('finished');
-    container.classList.remove('interactive'); // Pastikan opacity kembali 1.0
+    twibbonOpacity = NORMAL_OPACITY;
+    renderCanvas(); // Render terakhir untuk memastikan opacity 1.0
 
     getFinalCanvasBlob((blob) => {
         if (!blob) {
@@ -562,8 +592,9 @@ shareButton.addEventListener('click', shareImage);
 // --- FITUR GESER (PAN) DAN ZOOM (PINCH) DENGAN OPACITY ---
 // ==========================================================
 
+// Periksa class 'finished' untuk nonaktifkan interaksi
+
 canvas.addEventListener('wheel', e => {
-    // Nonaktifkan jika class 'finished' ada
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
 
     // Aktifkan mode interaktif saat zoom
@@ -588,7 +619,6 @@ canvas.addEventListener('wheel', e => {
 });
 
 canvas.addEventListener('mousedown', e => {
-    // Nonaktifkan jika class 'finished' ada
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
     isDragging = true;
@@ -600,7 +630,6 @@ canvas.addEventListener('mousedown', e => {
 });
 
 canvas.addEventListener('mousemove', e => {
-    // Nonaktifkan jika class 'finished' ada
     if (!isDragging || !container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
     
@@ -637,7 +666,6 @@ let initialPinchDistance = null;
 let initialScale = 1;
 
 canvas.addEventListener('touchstart', e => {
-    // Nonaktifkan jika class 'finished' ada
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
 
@@ -663,7 +691,6 @@ canvas.addEventListener('touchstart', e => {
 });
 
 canvas.addEventListener('touchmove', e => {
-    // Nonaktifkan jika class 'finished' ada
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
 
@@ -681,7 +708,7 @@ canvas.addEventListener('touchmove', e => {
         drawState.y += dy;
 
         lastX = currentPointers[0].clientX;
-        lastY = currentPointers[0].clientY;
+        lastY = currentPurenters[0].clientY;
     } else if (touchCount === 2 && initialPinchDistance !== null) {
         const currentDistance = getDistance(currentPointers[0], currentPointers[1]);
         
@@ -699,7 +726,6 @@ canvas.addEventListener('touchmove', e => {
 });
 
 canvas.addEventListener('touchend', e => {
-    // Nonaktifkan jika class 'finished' ada
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
 
     for (let i = 0; i < e.changedTouches.length; i++) {
@@ -735,4 +761,4 @@ canvas.addEventListener('touchcancel', () => {
 });
 </script>
 </body>
-</html>
+  </html>
