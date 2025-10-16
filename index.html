@@ -4,9 +4,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body {
+  font-family: Arial, sans-serif;
   margin: 5em auto;
   padding: 2em;
-  font-family: Arial, sans-serif;
 }
 
 .container {
@@ -16,7 +16,7 @@ body {
   margin: auto;
 }
 
-/* gambar tetap terlihat tapi klik diblok total */
+/* Gambar tetap terlihat tapi tidak bisa diklik */
 .image {
   display: block;
   width: 100%;
@@ -25,7 +25,7 @@ body {
   transition: 0.5s ease;
 }
 
-/* overlay di tengah */
+/* Overlay di tengah */
 .middle {
   transition: 0.5s ease;
   opacity: 0;
@@ -36,7 +36,7 @@ body {
   text-align: center;
   width: 80%;
   aspect-ratio: 1 / 1;
-  background-color: #fff;
+  background-color: rgba(255,255,255,0.95);
   border: 2px solid rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
@@ -44,16 +44,20 @@ body {
   color: #333;
   cursor: pointer;
   pointer-events: none; /* nonaktif sebelum overlay muncul */
-  user-select: none;
 }
 
+/* Hover visual */
 .container:hover .image {
-  opacity: 0.3; /* visual hover */
+  opacity: 0.3;
 }
 
 .container:hover .middle {
-  opacity: 1; /* overlay muncul */
-  pointer-events: auto; /* aktifkan klik hanya saat overlay muncul */
+  opacity: 1;
+}
+
+/* Drop area pointer-events hanya aktif setelah overlay muncul */
+.middle.active {
+  pointer-events: auto;
 }
 
 .middle.dragover {
@@ -65,9 +69,9 @@ body {
 <body>
 
 <h2>Drop Area Aman</h2>
-<p>Klik di placeholder <strong>tidak memicu upload</strong>. Upload hanya bisa melalui overlay yang muncul.</p>
+<p>Klik di placeholder tidak memicu upload. Upload hanya bisa melalui drop area di overlay.</p>
 
-<div class="container">
+<div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
   <div class="middle" id="dropArea">Klik atau seret disini</div>
 </div>
@@ -78,10 +82,21 @@ body {
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
+const container = document.getElementById('container');
 
-// Klik overlay untuk upload
+// Overlay muncul secara visual saat hover, tapi pointer-events aktif hanya di drop area
+container.addEventListener('mouseenter', () => {
+  dropArea.classList.add('active'); // aktifkan klik drop area
+});
+
+container.addEventListener('mouseleave', () => {
+  dropArea.classList.remove('active'); // nonaktifkan klik drop area
+});
+
+// Klik hanya di drop area
 dropArea.addEventListener('click', (e) => {
-  e.stopPropagation(); // mencegah bubbling ke container
+  e.stopPropagation(); // cegah bubbling
+  if (!dropArea.classList.contains('active')) return; // aman
   fileInput.click();
 });
 
@@ -97,8 +112,9 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// Drag & drop overlay
+// Drag & drop hanya aktif di drop area
 dropArea.addEventListener('dragover', (e) => {
+  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.add('dragover');
 });
@@ -108,6 +124,7 @@ dropArea.addEventListener('dragleave', () => {
 });
 
 dropArea.addEventListener('drop', (e) => {
+  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.remove('dragover');
   const files = e.dataTransfer.files;
