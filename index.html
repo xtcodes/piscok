@@ -5,19 +5,18 @@
 <title>Twibbon Uploader</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-/* --- CSS DIKEMBALIKAN KE VERSI AWAL + FIX KERAPIAN --- */
+/* --- CSS KODE ANDA YANG ASLI (Hanya ditambah styling untuk :disabled) --- */
 body {
     font-family: Arial, sans-serif;
     padding: 20px;
     margin: 0;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Untuk meletakkan konten di atas */
+    align-items: flex-start;
     min-height: 100vh;
-    background-color: #f4f4f4; /* Latar belakang body */
+    background-color: #f4f4f4;
 }
 
-/* KONTEN UTAMA (Container Pembungkus Asli) */
 .content-wrapper {
     background-color: #fff;
     padding: 20px;
@@ -33,7 +32,6 @@ h2 {
     margin-top: 0;
 }
 
-/* CONTAINER TWIBBON (Area tempat gambar dan canvas) */
 .container {
     position: relative;
     width: 100%;
@@ -60,7 +58,6 @@ h2 {
     background-color: #f9f9f9;
 }
 
-/* Drop Area (Teks "Klik atau seret disini") */
 .middle {
     position: absolute;
     top: 50%;
@@ -72,7 +69,7 @@ h2 {
     cursor: pointer;
     pointer-events: none;
     user-select: none;
-    opacity: 1; /* Awalnya terlihat */
+    opacity: 1;
     transition: opacity 0.3s;
     padding: 20px;
     border: 2px dashed #bbb;
@@ -85,7 +82,6 @@ h2 {
     pointer-events: none;
 }
 
-/* Canvas (Aktif saat gambar di-upload) */
 canvas {
     position: absolute;
     top: 0;
@@ -106,7 +102,6 @@ canvas:active {
     cursor: grabbing;
 }
 
-/* Tombol */
 .button-group {
     display: flex;
     justify-content: space-between;
@@ -125,18 +120,19 @@ button {
 
 #downloadButton {
     display: none;
-    background-color: #04AA6D; /* Hijau */
+    background-color: #04AA6D;
     color: white;
-    flex-grow: 1; /* Memastikan tombol download mengambil ruang lebih */
+    flex-grow: 1;
 }
 
-/* GAYA KHUSUS: Tombol Download setelah diklik/disable */
+/* --- PERBAIKAN CSS UNTUK TOMBOL DISABLED --- */
 #downloadButton:disabled {
     background-color: #cccccc; 
     color: #666666; 
     cursor: not-allowed; 
     pointer-events: none; 
 }
+/* ------------------------------------------- */
 
 #shareButton {
     display: none;
@@ -144,7 +140,7 @@ button {
     height: 40px;
     padding: 0;
     font-size: 18px;
-    background-color: #1DA1F2; /* Biru Twitter */
+    background-color: #1DA1F2;
     color: white;
     display: flex;
     align-items: center;
@@ -152,7 +148,6 @@ button {
     flex-shrink: 0;
 }
 
-/* Responsif */
 @media (max-width: 550px) {
     .content-wrapper {
         padding: 15px;
@@ -183,7 +178,7 @@ button {
 <input type="file" id="fileInput" style="display:none" accept="image/*">
 
 <script>
-// --- KONFIGURASI DAN ELEMEN DOM ---
+// --- JAVASCRIPT KODE ANDA YANG ASLI (Hanya ditambah perbaikan download) ---
 const container = document.getElementById('container');
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
@@ -193,11 +188,10 @@ const downloadButton = document.getElementById('downloadButton');
 const shareButton = document.getElementById('shareButton');
 const ctx = canvas.getContext('2d');
 
-// PATH FILE GAMBAR (KEMBALIKAN KE KONDISI ASLI)
+// PATH FILE GAMBAR
 const TWIBBON_URL = "twibbon.png"; 
 const PLACEHOLDER_URL = "placeholder.png"; 
 
-// --- Variabel State Gambar Pengguna ---
 let userImage = null; 
 let twibbonImage = null; 
 let drawState = {
@@ -208,13 +202,11 @@ let drawState = {
     initialScale: 1
 };
 
-// --- Variabel Interaksi ---
 let isDragging = false;
 let lastX = 0;
 let lastY = 0;
 let pointers = {};
 
-// --- Fungsi Utama Gambar (Render) ---
 function renderCanvas() {
     if (!userImage || !twibbonImage || canvas.width <= 0 || canvas.height <= 0) return;
 
@@ -237,7 +229,6 @@ function renderCanvas() {
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
 }
 
-// --- Fungsi Pengelolaan State Awal ---
 const resetToInitialState = (errorMessage = null) => {
     if (errorMessage) console.error(errorMessage); 
     
@@ -261,7 +252,6 @@ const resetToInitialState = (errorMessage = null) => {
     downloadButton.disabled = false;
 };
 
-// --- Fungsi Pemuatan dan Penggabungan Gambar ---
 function mergeImages(userImgSrc) {
     userImage = new Image();
     twibbonImage = new Image();
@@ -279,10 +269,8 @@ function mergeImages(userImgSrc) {
             return resetToInitialState("Gagal memuat gambar. Periksa konsol.");
         }
         
-        // Hitung skala awal agar gambar user muat di canvas
         drawState.initialScale = Math.min(canvas.width / userImage.width, canvas.height / userImage.height);
 
-        // Tampilkan canvas dan sembunyikan placeholder/drop area
         canvas.style.display = 'block';
         image.style.display = 'none'; 
         container.classList.add('uploaded'); 
@@ -290,7 +278,6 @@ function mergeImages(userImgSrc) {
         downloadButton.style.display = 'block';
         shareButton.style.display = 'flex'; 
 
-        // Reset tombol download saat upload baru
         downloadButton.textContent = 'Unduh Gambar';
         downloadButton.disabled = false;
 
@@ -309,13 +296,12 @@ function mergeImages(userImgSrc) {
     twibbonImage.src = TWIBBON_URL;
 }
 
-// --- FUNGSI UTILITY: Membuat Blob dari Canvas Final (Resolusi Tinggi) ---
 function getFinalCanvasBlob(callback) {
     if (!container.classList.contains('uploaded')) return;
     
     const finalCanvas = document.createElement('canvas');
     const finalCtx = finalCanvas.getContext('2d');
-    const finalSize = 1080; // Resolusi unduhan yang bagus (misal: 1080x1080)
+    const finalSize = 1080;
     finalCanvas.width = finalSize;
     finalCanvas.height = finalSize;
 
@@ -343,14 +329,11 @@ function getFinalCanvasBlob(callback) {
     finalCanvas.toBlob(callback, 'image/png');
 }
 
-// --- FUNGSI SHARE (DASAR) ---
 async function shareImage() {
     alert("Fitur berbagi sedang diproses. Silakan unduh manual.");
 }
 
-// --- EVENT LISTENERS ---
-
-// Pemuatan awal placeholder
+// Event Listeners (Bagian ini sama dengan kode asli)
 document.addEventListener('DOMContentLoaded', () => {
     image.src = PLACEHOLDER_URL; 
     image.onerror = () => image.src = '';
@@ -358,13 +341,11 @@ document.addEventListener('DOMContentLoaded', () => {
     shareButton.style.display = 'none';
 });
 
-// klik drop area → file dialog
 dropArea.addEventListener('click', e => {
     e.stopPropagation(); 
     fileInput.click();
 });
 
-// upload file (via dialog)
 fileInput.addEventListener('change', e => {
     if (e.target.files && e.target.files[0]) {
         const reader = new FileReader();
@@ -373,7 +354,6 @@ fileInput.addEventListener('change', e => {
     }
 });
 
-// drag & drop logic
 container.addEventListener('dragover', e => {
     e.preventDefault();
     dropArea.style.borderColor = '#04AA6D';
@@ -393,7 +373,7 @@ container.addEventListener('drop', e => {
     }
 });
 
-// Event listener tombol Unduh (MEMPERBAIKI MASALAH INTI)
+// --- PERBAIKAN UTAMA: TOMBOL DOWNLOAD DISABLE PERMANEN ---
 downloadButton.addEventListener('click', () => {
     if (downloadButton.disabled) return;
     
@@ -416,19 +396,17 @@ downloadButton.addEventListener('click', () => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
-        // Catatan: Tombol tetap disabled setelah unduhan selesai.
+        // Tombol tetap disabled
     });
 });
+// -------------------------------------------------------------
 
-// Event listener tombol Bagikan
 shareButton.addEventListener('click', shareImage);
 
 
-// ==========================================================
 // --- FITUR GESER (PAN) DAN ZOOM (PINCH) ---
-// ==========================================================
+// (Kode Interaksi Tetap sama)
 
-// --- MOUSE & PC ---
 canvas.addEventListener('wheel', e => {
     if (!container.classList.contains('uploaded')) return;
     e.preventDefault();
@@ -464,7 +442,6 @@ canvas.addEventListener('mouseleave', () => {
     isDragging = false;
 });
 
-// --- TOUCH & MOBILE ---
 function getDistance(p1, p2) {
     return Math.sqrt(Math.pow(p2.clientX - p1.clientX, 2) + Math.pow(p2.clientY - p1.clientY, 2));
 }
@@ -544,4 +521,4 @@ canvas.addEventListener('touchcancel', () => {
 });
 </script>
 </body>
-    </html>
+</html>
