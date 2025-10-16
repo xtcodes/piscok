@@ -16,13 +16,13 @@ body {
   margin: auto;
 }
 
-/* Gambar terlihat tapi klik diblok total */
+/* gambar tetap terlihat tapi klik diblok total */
 .image {
   display: block;
   width: 100%;
   height: auto;
-  transition: 0.5s ease;
   pointer-events: none; /* klik di placeholder TIDAK TERBACA */
+  transition: 0.5s ease;
 }
 
 /* overlay di tengah */
@@ -43,7 +43,7 @@ body {
   justify-content: center;
   color: #333;
   cursor: pointer;
-  pointer-events: none; /* nonaktif awal */
+  pointer-events: none; /* nonaktif sebelum overlay muncul */
   user-select: none;
 }
 
@@ -53,7 +53,7 @@ body {
 
 .container:hover .middle {
   opacity: 1; /* overlay muncul */
-  pointer-events: auto; /* aktifkan klik overlay */
+  pointer-events: auto; /* aktifkan klik hanya saat overlay muncul */
 }
 
 .middle.dragover {
@@ -65,7 +65,7 @@ body {
 <body>
 
 <h2>Drop Area Aman</h2>
-<p>Klik di gambar atau placeholder tidak memicu upload. Klik hanya bisa di overlay.</p>
+<p>Klik di placeholder <strong>tidak memicu upload</strong>. Upload hanya bisa melalui overlay yang muncul.</p>
 
 <div class="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -81,7 +81,7 @@ const image = document.querySelector('.image');
 
 // Klik overlay untuk upload
 dropArea.addEventListener('click', (e) => {
-  e.stopPropagation(); // **blok bubbling ke container**
+  e.stopPropagation(); // mencegah bubbling ke container
   fileInput.click();
 });
 
