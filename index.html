@@ -5,19 +5,33 @@
 <title>Twibbon Uploader</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
+/* --- PERBAIKAN RESPONSIVITAS --- */
 body {
   font-family: Arial, sans-serif;
-  margin: 4em auto;
-  padding: 2em;
+  /* Hapus margin auto dari body, cukup padding */
+  padding: 1.5em;
 }
+
+/* Kontainer utama untuk membatasi lebar konten di desktop */
+.main-wrapper {
+    max-width: 600px; /* Batas lebar konten yang nyaman dibaca di desktop */
+    margin: 4em auto; /* Pusatkan seluruh wrapper di tengah layar */
+}
+/* --- END PERBAIKAN RESPONSIVITAS --- */
+
 
 .container {
   position: relative;
   width: 100%;
-  max-width: 400px;
-  margin: auto;
+  /* Max-width 400px tetap dipertahankan untuk area twibbon agar tetap kotak */
+  max-width: 400px; 
+  /* Pusatkan kontainer twibbon di dalam main-wrapper */
+  margin: auto; 
+  
   aspect-ratio: 1 / 1; 
+  
   cursor: default;
+  
   overflow: hidden;
   border: 2px dashed #ccc; 
   border-radius: 8px; 
@@ -100,11 +114,15 @@ canvas:active {
     display: flex;
     margin-top: 10px;
     justify-content: space-between; 
+    
+    /* PENTING: Batasi dan pusatkan grup tombol agar sejajar dengan .container (400px) */
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/* Tombol Unduh: Fleksibel dan mengambil ruang. Default Dihilangkan (display: none). */
+/* Tombol Unduh */
 #downloadButton {
-    /* PENTING: display: none akan diatur oleh JavaScript */
     display: none; 
     padding: 10px 20px;
     font-size: 16px;
@@ -117,9 +135,8 @@ canvas:active {
     margin-right: 10px; 
 }
 
-/* Tombol Bagikan: Persegi 40x40px. Default Dihilangkan (display: none). */
+/* Tombol Bagikan: Persegi 40x40px */
 #shareButton {
-    /* PENTING: display: flex akan diatur oleh JavaScript */
     display: none; 
     width: 40px; 
     height: 40px; 
@@ -130,6 +147,7 @@ canvas:active {
     color: white;
     border: none;
     border-radius: 4px;
+    display: flex; /* Menggunakan flex di CSS karena nanti di-override oleh JS */
     align-items: center;
     justify-content: center;
     flex-shrink: 0; 
@@ -139,22 +157,24 @@ canvas:active {
 </head>
 <body>
 
-<h2>Upload Gambar Aman + Preview Asli</h2>
-<p>
-    Setelah gambar diunggah:<br>
-    🖱️ **Mouse:** Gulir untuk Zoom. Seret untuk Geser.<br>
-    👆 **Sentuh:** 1 Jari untuk Geser. 2 Jari untuk Zoom/Pinch.
-</p>
+<div class="main-wrapper"> 
+    <h2>Upload Gambar Aman + Preview Asli</h2>
+    <p>
+        Setelah gambar diunggah:<br>
+        🖱️ **Mouse:** Gulir untuk Zoom. Seret untuk Geser.<br>
+        👆 **Sentuh:** 1 Jari untuk Geser. 2 Jari untuk Zoom/Pinch.
+    </p>
 
-<div class="container" id="container">
-  <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Upload Gambar Anda" class="image"> 
-  <div class="middle" id="dropArea">Klik atau seret disini</div>
-  <canvas id="canvas"></canvas>
-</div>
+    <div class="container" id="container">
+      <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Upload Gambar Anda" class="image"> 
+      <div class="middle" id="dropArea">Klik atau seret disini</div>
+      <canvas id="canvas"></canvas>
+    </div>
 
-<div class="button-group">
-    <button id="downloadButton">Unduh Gambar</button>
-    <button id="shareButton" title="Bagikan Gambar"><i class="fas fa-share-alt"></i></button>
+    <div class="button-group">
+        <button id="downloadButton">Unduh Gambar</button>
+        <button id="shareButton" title="Bagikan Gambar"><i class="fas fa-share-alt"></i></button>
+    </div>
 </div>
 
 <input type="file" id="fileInput" style="display:none" accept="image/*">
@@ -287,7 +307,7 @@ function mergeImages(userImgSrc) {
   twibbonImage.src = TWIBBON_URL;
 }
 
-// --- FUNGSI DOWNLOAD & SHARE (TIDAK BERUBAH) ---
+// --- FUNGSI DOWNLOAD & SHARE ---
 
 function getFinalCanvasBlob(callback) {
     if (!container.classList.contains('uploaded')) return;
@@ -372,7 +392,7 @@ async function shareImage() {
 }
 
 
-// --- Event Listeners Dll (TIDAK BERUBAH) ---
+// --- Event Listeners Dll (Tidak Berubah) ---
 
 document.addEventListener('DOMContentLoaded', () => {
     image.onerror = () => {
