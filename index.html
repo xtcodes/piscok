@@ -97,7 +97,8 @@ const image = document.querySelector('.image');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-const twibbonSrc = 'twibbon.png'; // pastikan ada di folder yang sama
+// Ganti dengan URL twibbon yang valid
+const TWIBBON_URL = "twibbon.png";
 
 function mergeImages(userImgSrc) {
   const userImg = new Image();
@@ -108,14 +109,14 @@ function mergeImages(userImgSrc) {
     loadedCount++;
     if (loadedCount < 2) return;
 
-    // Set canvas kotak 1:1 sesuai placeholder
+    // Set canvas 1:1 sesuai container
     const rect = container.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.width; // ratio 1:1
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw user image, scale & center
+    // Draw user image scaled & centered
     const scale = Math.min(canvas.width / userImg.width, canvas.height / userImg.height);
     const x = (canvas.width - userImg.width * scale) / 2;
     const y = (canvas.height - userImg.height * scale) / 2;
@@ -124,7 +125,7 @@ function mergeImages(userImgSrc) {
     // Draw twibbon full canvas
     ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
 
-    // Tampilkan canvas & sembunyikan img
+    // Tampilkan canvas & sembunyikan placeholder
     canvas.style.display = 'block';
     image.style.display = 'none';
   }
@@ -133,11 +134,10 @@ function mergeImages(userImgSrc) {
   userImg.onerror = () => alert('Gagal load gambar user!');
 
   twibbon.onload = drawIfReady;
-  twibbon.onerror = () => alert('Gagal load twibbon! Pastikan twibbon.png ada di folder yang sama.');
+  twibbon.onerror = () => alert('Gagal load twibbon! Pastikan URL benar dan bisa diakses publik.');
 
-  // Hapus crossOrigin supaya bisa load lokal
   userImg.src = userImgSrc;
-  twibbon.src = twibbonSrc;
+  twibbon.src = TWIBBON_URL;
 }
 
 // Klik placeholder → aktifkan overlay
