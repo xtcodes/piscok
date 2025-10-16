@@ -107,15 +107,12 @@ function mergeImages(userImgSrc) {
     loadedCount++;
     if (loadedCount < 2) return;
 
-    // pastikan canvas pixel sesuai container
+    // ukuran canvas sesuai container
     const rect = container.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // gambar twibbon full canvas
-    ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
 
     // gambar user proporsional & center
     const scale = Math.min(canvas.width / userImg.width, canvas.height / userImg.height);
@@ -123,9 +120,12 @@ function mergeImages(userImgSrc) {
     const y = (canvas.height - userImg.height * scale) / 2;
     ctx.drawImage(userImg, x, y, userImg.width * scale, userImg.height * scale);
 
-    // tampilkan canvas, sembunyikan placeholder
+    // gambar twibbon full canvas di atas user
+    ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
+
+    // tampilkan canvas, sembunyikan placeholder & drop area
     canvas.style.display = 'block';
-    image.getElementsByTagName('img')[0].style.display = 'none';
+    image.style.display = 'none';
     dropArea.style.display = 'none';
     container.classList.add('uploaded');
   }
@@ -176,7 +176,8 @@ dropArea.addEventListener('drop', e => {
     reader.readAsDataURL(e.dataTransfer.files[0]);
   }
 });
-</script>      
+</script>
+      
 
 </body>
 </html>
