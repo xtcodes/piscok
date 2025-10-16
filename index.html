@@ -556,77 +556,108 @@ canvas.addEventListener('touchcancel', () => {
 });
 
 // ==========================================================
-// --- FUNGSI PARTIKEL CONFETTI (Disesuaikan untuk efek ledakan yang lebih lama dan luas) ---
+// --- FUNGSI PARTIKEL CONFETTI (Disesuaikan untuk 5 Titik Ledakan & Terbatas pada Area Preview) ---
 // ==========================================================
 function showConfetti() {
     const containerRect = container.getBoundingClientRect();
-    const numberOfConfetti = 150; // Lebih banyak partikel
+    const numberOfConfettiPerPoint = 30; // 5 titik * 30 = 150 partikel total
     const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#ffa500', '#8a2be2', '#dc143c'];
-    
-    // Posisi tengah untuk ledakan (pusat container)
-    const startX = containerRect.left + containerRect.width / 2;
-    const startY = containerRect.top + containerRect.height / 2;
 
-    for (let i = 0; i < numberOfConfetti; i++) {
-        const confetti = document.createElement('div');
-        confetti.classList.add('confetti');
-        
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        
-        const size = Math.random() * 3 + 2; 
-        confetti.style.width = `${size}px`;
-        confetti.style.height = `${size}px`;
+    // 1. Definisikan 5 Titik Ledakan (Koordinat relatif ke layar)
+    const explosionPoints = [
+        // Tengah
+        { x: containerRect.left + containerRect.width / 2, y: containerRect.top + containerRect.height / 2 },
+        // Kiri Atas
+        { x: containerRect.left + 10, y: containerRect.top + 10 },
+        // Kanan Atas
+        { x: containerRect.right - 10, y: containerRect.top + 10 },
+        // Kiri Bawah
+        { x: containerRect.left + 10, y: containerRect.bottom - 10 },
+        // Kanan Bawah
+        { x: containerRect.right - 10, y: containerRect.bottom - 10 }
+    ];
 
-        // Posisi awal (sedikit acak di sekitar pusat ledakan)
-        confetti.style.left = `${startX + (Math.random() - 0.5) * 20}px`; 
-        confetti.style.top = `${startY + (Math.random() - 0.5) * 20}px`;   
-        
-        // === Logika ledakan utama yang diubah ===
-        const angle = Math.random() * Math.PI * 2; 
-        // Jarak sebaran acak: 200px hingga 400px (Lebih Menyebar)
-        const spreadDistance = Math.random() * 200 + 200; 
-        
-        // Hitung posisi akhir
-        const endX = startX + Math.cos(angle) * spreadDistance;
-        // Tambahkan efek jatuh yang lebih besar
-        const endY = startY + Math.sin(angle) * spreadDistance + Math.random() * 250; 
-        
-        // Durasi animasi yang lebih lama: 4.5 - 5.5 detik (Lebih Lambat)
-        const animationDuration = 4.5 + Math.random() * 1.0; 
-        const animationDelay = Math.random() * 0.5; 
+    const styleSheet = document.styleSheets[0];
 
-        // Buat keyframes CSS secara dinamis untuk setiap confetti
-        const styleSheet = document.styleSheets[0];
-        const keyframeName = `confettiAnim-${Date.now()}-${i}`;
+    explosionPoints.forEach(point => {
+        const startX = point.x;
+        const startY = point.y;
 
-        const keyframeRule = `@keyframes ${keyframeName} {
-            0% {
-                opacity: 1;
-                transform: translate(0, 0) scale(1) rotateZ(0deg);
-            }
-            100% {
-                opacity: 0;
-                transform: translate(${endX - parseFloat(confetti.style.left)}px, ${endY - parseFloat(confetti.style.top)}px) scale(0.3) rotateZ(${Math.random() > 0.5 ? '' : '-'}1080deg);
-            }
-        }`;
-        styleSheet.insertRule(keyframeRule, styleSheet.cssRules.length);
+        for (let i = 0; i < numberOfConfettiPerPoint; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
 
-        // Gunakan fungsi timing 'linear' atau 'ease-out' untuk efek jatuh yang natural
-        confetti.style.animation = `${keyframeName} ${animationDuration}s ${animationDelay}s forwards ease-out`;
-        
-        document.body.appendChild(confetti);
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            const size = Math.random() * 3 + 2; 
+            confetti.style.width = `${size}px`;
+            confetti.style.height = `${size}px`;
 
-        confetti.addEventListener('animationend', () => {
-            confetti.remove();
-            // Hapus aturan keyframe setelah animasi selesai
-            for (let k = 0; k < styleSheet.cssRules.length; k++) {
-                if (styleSheet.cssRules[k].name === keyframeName) {
-                    styleSheet.deleteRule(k);
-                    break;
+            // Atur posisi awal partikel sedikit acak di sekitar titik ledakan
+            confetti.style.left = `${startX + (Math.random() - 0.5) * 10}px`; 
+            confetti.style.top = `${startY + (Math.random() - 0.5) * 10}px`;   
+            
+            // === Logika Gerakan Terbatas ===
+            const angle = Math.random() * Math.PI * 2; 
+            
+            // Jarak sebaran dibatasi agar tidak melewati batas container.
+            // Nilai maksimal diatur sekitar 90% dari setengah lebar/tinggi container.
+            const maxSpread = Math.min(containerRect.width, containerRect.height) * 0.45; 
+            const spreadDistance = Math.random() * maxSpread + 20; // Jarak 20px hingga maxSpread
+            
+            // Hitung posisi akhir
+            // Gerakan horizontal dan vertikal yang diinginkan
+            const dx = Math.cos(angle) * spreadDistance;
+            // Tambahkan efek jatuh (gravitasi) yang lebih alami
+            let dy = Math.sin(angle) * spreadDistance + Math.random() * 50; 
+
+            // Hitung koordinat layar akhir yang diinginkan
+            let targetX = startX + dx;
+            let targetY = startY + dy;
+
+            // Pastikan target tetap di dalam batas container:
+            targetX = Math.min(Math.max(targetX, containerRect.left + 5), containerRect.right - 5);
+            targetY = Math.min(Math.max(targetY, containerRect.top + 5), containerRect.bottom - 5);
+
+            // Hitung ulang pergeseran (dx dan dy) relatif ke posisi awal yang sudah ditetapkan
+            const finalDx = targetX - parseFloat(confetti.style.left);
+            const finalDy = targetY - parseFloat(confetti.style.top);
+
+
+            const animationDuration = 4.5 + Math.random() * 1.0; 
+            const animationDelay = Math.random() * 0.5; 
+
+            // Buat keyframes CSS secara dinamis untuk setiap confetti
+            const keyframeName = `confettiAnim-${Date.now()}-${i}-${Math.floor(Math.random() * 1000)}`;
+
+            const keyframeRule = `@keyframes ${keyframeName} {
+                0% {
+                    opacity: 1;
+                    transform: translate(0, 0) scale(1) rotateZ(0deg);
                 }
-            }
-        });
-    }
+                100% {
+                    opacity: 0;
+                    transform: translate(${finalDx}px, ${finalDy}px) scale(0.3) rotateZ(${Math.random() > 0.5 ? '' : '-'}1080deg);
+                }
+            }`;
+            styleSheet.insertRule(keyframeRule, styleSheet.cssRules.length);
+
+            confetti.style.animation = `${keyframeName} ${animationDuration}s ${animationDelay}s forwards ease-out`;
+            
+            document.body.appendChild(confetti);
+
+            confetti.addEventListener('animationend', () => {
+                confetti.remove();
+                // Hapus aturan keyframe setelah animasi selesai
+                for (let k = 0; k < styleSheet.cssRules.length; k++) {
+                    if (styleSheet.cssRules[k].name === keyframeName) {
+                        styleSheet.deleteRule(k);
+                        break;
+                    }
+                }
+            });
+        }
+    });
   }
 </script>
 </body>
