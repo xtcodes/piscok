@@ -3,6 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Twibbon Uploader</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -18,7 +19,7 @@ body {
   
   aspect-ratio: 1 / 1; 
   
-  cursor: default; /* Default cursor menjadi default */
+  cursor: default;
   
   overflow: hidden;
   border: 2px dashed #ccc; 
@@ -36,7 +37,7 @@ body {
   width: 100%;
   height: 100%; 
   object-fit: contain; 
-  pointer-events: none; /* PENTING: gambar tidak bisa diklik */
+  pointer-events: none;
   transition: opacity 0.3s ease, filter 0.3s ease;
   background-color: #e0e0e0; 
 }
@@ -60,9 +61,8 @@ body {
   align-items: center;
   justify-content: center;
   color: #333;
-  cursor: pointer; /* Cursor pointer untuk dropArea saat aktif */
+  cursor: pointer;
   
-  /* PENTING: dropArea tidak terlihat dan tidak interaktif secara default */
   pointer-events: none; 
   user-select: none;
   opacity: 0;
@@ -71,11 +71,10 @@ body {
   z-index: 10; 
 }
 
-/* Kapan dropArea menjadi aktif dan terlihat */
 .middle.active {
-  pointer-events: auto; /* Bisa diinteraksi */
+  pointer-events: auto;
   opacity: 1;
-  visibility: visible; /* Terlihat */
+  visibility: visible;
 }
 
 .middle.dragover {
@@ -91,19 +90,24 @@ canvas {
   height: 100%;
   display: none; 
   z-index: 5; 
-  /* Kursor grab saat gambar sudah diupload */
   cursor: grab;
-  touch-action: none; /* Memastikan interaksi sentuh ditangani oleh JS */
+  touch-action: none;
 }
 
 canvas:active {
     cursor: grabbing;
 }
 
-/* Tambahkan tombol Download */
-#downloadButton {
-    display: none;
+/* 2. Gaya untuk Grup Tombol Fleksibel */
+.button-group {
+    display: flex; /* Mengubah grup tombol menjadi flex container */
+    justify-content: flex-end; /* Memindahkan elemen ke kanan */
     margin-top: 10px;
+}
+
+/* 3. Gaya Tombol Unduh (agar fleksibel dan tidak 100% lebar) */
+#downloadButton {
+    display: none; /* Tetap disembunyikan sampai gambar siap */
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
@@ -111,7 +115,33 @@ canvas:active {
     color: white;
     border: none;
     border-radius: 4px;
+    flex-grow: 1; /* Biarkan tombol unduh mengambil ruang yang tersedia */
+    margin-right: 10px; /* Jarak antara tombol unduh dan bagikan */
 }
+
+/* 4. Gaya Tombol Bagikan (bentuk persegi 40x40) */
+#shareButton {
+    display: none; /* Sembunyikan secara default */
+    width: 40px; /* Ukuran yang diminta */
+    height: 40px; /* Ukuran yang diminta */
+    padding: 0; /* Hapus padding default */
+    font-size: 18px; /* Ukuran ikon */
+    cursor: pointer;
+    background-color: #1DA1F2; /* Warna sosial media/bagikan */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    display: flex; /* Gunakan flex untuk menengahkan ikon */
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; /* Pastikan tombol tidak menyusut */
+}
+
+/* Tampilkan tombol bagikan ketika tombol unduh terlihat */
+.button-group:has(#downloadButton[style*="block"]) #shareButton {
+    display: flex; 
+}
+
 </style>
 </head>
 <body>
@@ -129,7 +159,10 @@ canvas:active {
   <canvas id="canvas"></canvas>
 </div>
 
-<button id="downloadButton">Unduh Gambar</button>
+<div class="button-group">
+    <button id="downloadButton">Unduh Gambar</button>
+    <button id="shareButton" title="Bagikan Gambar"><i class="fas fa-share-alt"></i></button>
+</div>
 
 <input type="file" id="fileInput" style="display:none" accept="image/*">
 
@@ -140,26 +173,27 @@ const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 const canvas = document.getElementById('canvas');
 const downloadButton = document.getElementById('downloadButton');
+const shareButton = document.getElementById('shareButton'); // Tombol Bagikan
 const ctx = canvas.getContext('2d');
 const TWIBBON_URL = "twibbon.png"; 
 const PLACEHOLDER_URL = "placeholder.png"; 
 
 // --- Variabel State Gambar Pengguna ---
-let userImage = null; // Objek Image dari gambar pengguna
-let twibbonImage = null; // Objek Image dari twibbon
+let userImage = null; 
+let twibbonImage = null; 
 let drawState = {
     x: 0,
     y: 0,
     scale: 1,
-    rotation: 0, // Belum diimplementasikan, tapi baik untuk dipersiapkan
-    initialScale: 1 // Skala awal agar gambar pas
+    rotation: 0,
+    initialScale: 1
 };
 
 // --- Variabel Interaksi ---
 let isDragging = false;
 let lastX = 0;
 let lastY = 0;
-let pointers = {}; // Untuk melacak sentuhan (multi-touch)
+let pointers = {};
 
 // --- Fungsi Utama Gambar (Render) ---
 function renderCanvas() {
@@ -167,14 +201,11 @@ function renderCanvas() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
-    // Hitung ukuran gambar pengguna setelah diskalakan
     const userScaledWidth = userImage.width * drawState.initialScale * drawState.scale;
     const userScaledHeight = userImage.height * drawState.initialScale * drawState.scale;
 
-    // Gambar gambar pengguna (latar belakang)
     ctx.save();
     ctx.translate(canvas.width / 2 + drawState.x, canvas.height / 2 + drawState.y);
-    // Jika rotasi diperlukan: ctx.rotate(drawState.rotation * Math.PI / 180);
     ctx.drawImage(
         userImage, 
         -userScaledWidth / 2, 
@@ -184,7 +215,6 @@ function renderCanvas() {
     );
     ctx.restore();
 
-    // Gambar twibbon (lapisan atas)
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
 }
 
@@ -192,25 +222,22 @@ function renderCanvas() {
 const resetToInitialState = (errorMessage = null) => {
     if (errorMessage) alert(errorMessage); 
     
-    // Reset gambar dan state
     userImage = null;
     twibbonImage = null;
     drawState = { x: 0, y: 0, scale: 1, rotation: 0, initialScale: 1 };
     
-    // Tampilkan placeholder
     image.src = PLACEHOLDER_URL; 
     image.style.display = 'block';
     image.style.filter = 'none'; 
     image.style.opacity = '1';
 
-    // Sembunyikan canvas dan drop area
     canvas.style.display = 'none'; 
     dropArea.classList.remove('active'); 
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
     downloadButton.style.display = 'none';
+    shareButton.style.display = 'none'; // Sembunyikan tombol bagikan
 
-    // Reset container state
     container.classList.remove('uploaded'); 
     container.style.cursor = 'default'; 
 
@@ -227,28 +254,16 @@ function mergeImages(userImgSrc) {
     imagesLoaded++;
     if (imagesLoaded < 2) return; 
 
-    // PENTING: Set dimensi canvas berdasarkan ukuran container saat ini
     const rect = container.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    if (canvas.width <= 0 || canvas.height <= 0) {
-        return resetToInitialState("Gagal menggambar: Ukuran area tampilan tidak valid.");
-    }
-    if (userImage.width <= 0 || userImage.height <= 0) {
-        return resetToInitialState("Gagal menggambar: Gambar pengguna tidak valid atau rusak.");
-    }
-    if (twibbonImage.width <= 0 || twibbonImage.height <= 0) {
-        return resetToInitialState("Gagal menggambar: Gambar twibbon tidak valid atau rusak.");
+    if (canvas.width <= 0 || canvas.height <= 0 || userImage.width <= 0 || userImage.height <= 0 || twibbonImage.width <= 0 || twibbonImage.height <= 0) {
+        return resetToInitialState("Gagal memuat gambar. Periksa konsol untuk detail.");
     }
     
-    // Hitung skala awal agar gambar pengguna pas di dalam container
     drawState.initialScale = Math.min(canvas.width / userImage.width, canvas.height / userImage.height);
-    // Jika ingin gambar menutupi penuh (cover), ganti Math.min menjadi Math.max:
-    // drawState.initialScale = Math.max(canvas.width / userImage.width, canvas.height / userImage.height);
 
-
-    // Sembunyikan elemen upload, tampilkan canvas
     canvas.style.display = 'block';
     image.style.display = 'none'; 
     dropArea.style.opacity = '0'; 
@@ -257,8 +272,9 @@ function mergeImages(userImgSrc) {
     container.classList.add('uploaded'); 
     container.style.cursor = 'default'; 
     downloadButton.style.display = 'block';
+    shareButton.style.display = 'flex'; // Tampilkan tombol bagikan
 
-    renderCanvas(); // Gambar pertama kali
+    renderCanvas();
   }
 
   userImage.crossOrigin = "anonymous";
@@ -273,7 +289,97 @@ function mergeImages(userImgSrc) {
   twibbonImage.src = TWIBBON_URL;
 }
 
-// --- Event Listeners Awal ---
+
+// --- FUNGSI DOWNLOAD BARU ---
+function getFinalCanvasBlob(callback) {
+    if (!container.classList.contains('uploaded')) return;
+    
+    const finalCanvas = document.createElement('canvas');
+    const finalCtx = finalCanvas.getContext('2d');
+    const finalSize = 800;
+    finalCanvas.width = finalSize;
+    finalCanvas.height = finalSize;
+
+    const finalInitialScale = Math.min(finalSize / userImage.width, finalSize / userImage.height);
+    const finalUserScaledWidth = userImage.width * finalInitialScale * drawState.scale;
+    const finalUserScaledHeight = userImage.height * finalInitialScale * drawState.scale;
+    
+    const ratio = finalSize / canvas.width;
+    const finalX = drawState.x * ratio;
+    const finalY = drawState.y * ratio;
+
+    finalCtx.save();
+    finalCtx.translate(finalCanvas.width / 2 + finalX, finalCanvas.height / 2 + finalY);
+    finalCtx.drawImage(
+        userImage, 
+        -finalUserScaledWidth / 2, 
+        -finalUserScaledHeight / 2, 
+        finalUserScaledWidth, 
+        finalUserScaledHeight
+    );
+    finalCtx.restore();
+
+    finalCtx.drawImage(twibbonImage, 0, 0, finalSize, finalSize);
+
+    // Mengambil blob dari canvas untuk download/share
+    finalCanvas.toBlob(callback, 'image/png');
+}
+
+// --- FUNGSI SHARE BARU ---
+async function shareImage() {
+    if (!container.classList.contains('uploaded')) {
+        alert("Mohon upload dan edit gambar Anda terlebih dahulu.");
+        return;
+    }
+
+    // 1. Cek apakah Web Share API didukung dan bisa membagikan file
+    if (navigator.canShare && navigator.canShare({ files: [new File([""], "image.png", { type: "image/png" })] })) {
+        
+        getFinalCanvasBlob(async (blob) => {
+            if (!blob) return;
+            
+            try {
+                const file = new File([blob], 'twibbon-hasil.png', { type: 'image/png' });
+                await navigator.share({
+                    files: [file],
+                    title: 'Twibbon Keren',
+                    text: 'Lihat hasil twibbon saya!',
+                    url: window.location.href, // Bagikan link halaman ini juga
+                });
+                console.log('Berbagi berhasil!');
+            } catch (error) {
+                console.error('Gagal berbagi:', error);
+                if (error.name !== 'AbortError') {
+                     alert(`Gagal berbagi gambar. Error: ${error.message}`);
+                }
+            }
+        });
+
+    } 
+    // 2. Fallback untuk Web Share API dasar (tanpa file)
+    else if (navigator.share) {
+         try {
+            await navigator.share({
+                title: 'Twibbon Keren',
+                text: 'Lihat twibbon saya (Anda dapat mengunduh dan mengunggahnya secara manual)!',
+                url: window.location.href,
+            });
+            console.log('Berbagi berhasil (fallback)!');
+        } catch (error) {
+            console.error('Gagal berbagi:', error);
+             if (error.name !== 'AbortError') {
+                 alert(`Gagal berbagi link. Error: ${error.message}`);
+             }
+        }
+    } 
+    // 3. Fallback jika tidak ada Web Share API
+    else {
+        alert("Browser Anda tidak mendukung fitur berbagi. Silakan unduh gambar dan bagikan secara manual.");
+    }
+}
+
+
+// --- Event Listeners Dll (Tidak Berubah Signifikan) ---
 
 document.addEventListener('DOMContentLoaded', () => {
     image.onerror = () => {
@@ -349,57 +455,28 @@ dropArea.addEventListener('drop', e => {
   }
 });
 
+// Event listener tombol Unduh
 downloadButton.addEventListener('click', () => {
-    if (container.classList.contains('uploaded')) {
-        // Render ulang dengan ukuran yang lebih besar (misalnya 800x800) untuk kualitas lebih baik
-        const finalCanvas = document.createElement('canvas');
-        const finalCtx = finalCanvas.getContext('2d');
-        const finalSize = 800; // Ukuran resolusi unduhan
-        finalCanvas.width = finalSize;
-        finalCanvas.height = finalSize;
-
-        // Hitung ulang initialScale untuk resolusi baru
-        const finalInitialScale = Math.min(finalSize / userImage.width, finalSize / userImage.height);
+    getFinalCanvasBlob((blob) => {
+        if (!blob) return;
         
-        // Hitung ukuran gambar pengguna setelah diskalakan untuk resolusi akhir
-        const finalUserScaledWidth = userImage.width * finalInitialScale * drawState.scale;
-        const finalUserScaledHeight = userImage.height * finalInitialScale * drawState.scale;
-        
-        // Sesuaikan posisi pan (x, y) agar proporsional dengan resolusi baru
-        const ratio = finalSize / canvas.width;
-        const finalX = drawState.x * ratio;
-        const finalY = drawState.y * ratio;
-
-
-        // Gambar gambar pengguna (latar belakang)
-        finalCtx.save();
-        finalCtx.translate(finalCanvas.width / 2 + finalX, finalCanvas.height / 2 + finalY);
-        finalCtx.drawImage(
-            userImage, 
-            -finalUserScaledWidth / 2, 
-            -finalUserScaledHeight / 2, 
-            finalUserScaledWidth, 
-            finalUserScaledHeight
-        );
-        finalCtx.restore();
-
-        // Gambar twibbon (lapisan atas)
-        finalCtx.drawImage(twibbonImage, 0, 0, finalSize, finalSize);
-
-
-        // Unduh gambar
+        const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = 'twibbon-hasil.png';
-        link.href = finalCanvas.toDataURL('image/png');
+        link.href = url;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    }
+        URL.revokeObjectURL(url);
+    });
 });
+
+// Event listener tombol Bagikan
+shareButton.addEventListener('click', shareImage);
 
 
 // ==========================================================
-// --- FITUR GESER (PAN) DAN ZOOM (PINCH) ---
+// --- FITUR GESER (PAN) DAN ZOOM (PINCH) (Kode sama) ---
 // ==========================================================
 
 // --- MOUSE & PC ---
@@ -410,11 +487,10 @@ canvas.addEventListener('wheel', e => {
 
     e.preventDefault();
     
-    const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1; // Zoom out atau Zoom in
+    const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
     
-    // Batasi zoom
     const newScale = drawState.scale * scaleFactor;
-    if (newScale < 0.5 || newScale > 5.0) return; // Batasan Zoom
+    if (newScale < 0.5 || newScale > 5.0) return;
 
     drawState.scale = newScale;
 
@@ -475,7 +551,6 @@ canvas.addEventListener('touchstart', e => {
     if (!container.classList.contains('uploaded')) return;
     e.preventDefault();
 
-    // Simpan semua sentuhan
     for (let i = 0; i < e.touches.length; i++) {
         pointers[e.touches[i].identifier] = e.touches[i];
     }
@@ -483,14 +558,12 @@ canvas.addEventListener('touchstart', e => {
     const touchCount = Object.keys(pointers).length;
 
     if (touchCount === 1) {
-        // 1 Jari: Geser (Pan)
         isDragging = true;
         lastX = e.touches[0].clientX;
         lastY = e.touches[0].clientY;
-        initialPinchDistance = null; // Pastikan pinch di-reset
+        initialPinchDistance = null;
     } else if (touchCount === 2) {
-        // 2 Jari: Zoom (Pinch)
-        isDragging = false; // Nonaktifkan dragging 1 jari
+        isDragging = false;
         initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
         initialScale = drawState.scale;
     }
@@ -500,7 +573,6 @@ canvas.addEventListener('touchmove', e => {
     if (!container.classList.contains('uploaded')) return;
     e.preventDefault();
 
-    // Perbarui posisi sentuhan
     for (let i = 0; i < e.touches.length; i++) {
         pointers[e.touches[i].identifier] = e.touches[i];
     }
@@ -508,7 +580,6 @@ canvas.addEventListener('touchmove', e => {
     const touchCount = currentPointers.length;
 
     if (touchCount === 1 && isDragging) {
-        // 1 Jari: Geser (Pan)
         const dx = currentPointers[0].clientX - lastX;
         const dy = currentPointers[0].clientY - lastY;
 
@@ -516,24 +587,18 @@ canvas.addEventListener('touchmove', e => {
         drawState.y += dy;
 
         lastX = currentPointers[0].clientX;
-        lastY = currentPointers[0].clientY;
+        lastY = currentPancers[0].clientY;
     } else if (touchCount === 2 && initialPinchDistance !== null) {
-        // 2 Jari: Zoom (Pinch)
         const currentDistance = getDistance(currentPointers[0], currentPointers[1]);
         
         let scaleDelta = currentDistance / initialPinchDistance;
 
         let newScale = initialScale * scaleDelta;
         
-        // Batasi zoom
         if (newScale < 0.5) newScale = 0.5;
         if (newScale > 5.0) newScale = 5.0;
 
         drawState.scale = newScale;
-
-        // TODO: Anda bisa menambahkan logika untuk menggeser saat pinch
-        // agar zoom terjadi di tengah-tengah jari
-
     }
     
     renderCanvas();
@@ -542,7 +607,6 @@ canvas.addEventListener('touchmove', e => {
 canvas.addEventListener('touchend', e => {
     if (!container.classList.contains('uploaded')) return;
 
-    // Hapus sentuhan yang sudah berakhir
     for (let i = 0; i < e.changedTouches.length; i++) {
         delete pointers[e.changedTouches[i].identifier];
     }
@@ -551,13 +615,12 @@ canvas.addEventListener('touchend', e => {
 
     if (touchCount < 2) {
         initialPinchDistance = null;
-        initialScale = 1; // Reset skala pinch
+        initialScale = 1;
     }
     if (touchCount === 0) {
         isDragging = false;
     }
     
-    // Jika masih ada 1 jari tersisa, aktifkan kembali mode geser
     if (touchCount === 1) {
         isDragging = true;
         const remainingTouch = Object.values(pointers)[0];
