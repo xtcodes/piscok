@@ -10,7 +10,7 @@ body {
   font-family: Arial, sans-serif;
   padding: 0; 
   margin: 0; 
-  background-color: #f0f0f2; /* Warna body (area merah di SS) */
+  background-color: #f0f0f2;
   min-height: 100vh;
   display: flex; 
   align-items: flex-start; 
@@ -23,7 +23,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%; 
-    background-color: rgba(0, 0, 0, 0.5); /* Efek blur/gelap di latar belakang */
+    background-color: rgba(0, 0, 0, 0.5); 
     display: flex;
     justify-content: center;
     align-items: center; /* Pemusatan Vertikal */
@@ -32,13 +32,13 @@ body {
     z-index: 1000;
 }
 
-/* KONTEN UTAMA (Modal/Card, area biru di SS) */
+/* KONTEN UTAMA (Modal/Card) */
 .dialog-content {
-    background-color: #fdfdff; /* Latar belakang Card */
+    background-color: #fdfdff; 
     border-radius: 8px; 
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); 
-    width: 100%; /* Agar responsif */
-    max-width: 500px; /* Batas lebar desktop */
+    width: 100%; 
+    max-width: 500px; 
     padding: 20px; 
     box-sizing: border-box; 
     margin-top: 0;
@@ -71,7 +71,7 @@ p {
 .container:not(.uploaded):hover {
   border-color: transparent; 
   transform: none; 
-  box-shadow: 0 0 0 2px #04AA6D; /* Border hijau saat hover */
+  box-shadow: 0 0 0 2px #04AA6D; 
 }
 
 .image {
@@ -99,7 +99,7 @@ p {
   aspect-ratio: 1 / 1;
   background: rgba(255, 255, 255, 0.7); 
   backdrop-filter: blur(5px); 
-  border: 2px dashed #007bff; /* Border putus-putus */
+  border: 2px dashed #007bff; 
   border-radius: 8px; 
   display: flex;
   align-items: center;
@@ -230,7 +230,7 @@ const canvas = document.getElementById('canvas');
 const downloadButton = document.getElementById('downloadButton');
 const shareButton = document.getElementById('shareButton');
 const ctx = canvas.getContext('2d');
-// Ganti dengan path file Twibbon dan Placeholder Anda
+// PATH FILE TWIBBON AND PLACEHOLDER
 const TWIBBON_URL = "twibbon.png"; 
 const PLACEHOLDER_URL = "placeholder.png"; 
 
@@ -336,7 +336,7 @@ function mergeImages(userImgSrc) {
     downloadButton.style.display = 'block';
     shareButton.style.display = 'flex'; 
 
-    // Pastikan tombol unduh aktif kembali dan teks Unduh Gambar
+    // Pastikan tombol unduh aktif kembali saat gambar baru diupload
     downloadButton.textContent = 'Unduh Gambar';
     downloadButton.disabled = false;
 
@@ -390,16 +390,50 @@ function getFinalCanvasBlob(callback) {
     finalCanvas.toBlob(callback, 'image/png');
 }
 
-// --- FUNGSI SHARE (Dipertahankan) ---
+// --- FUNGSI SHARE ---
 async function shareImage() {
     if (!container.classList.contains('uploaded')) {
         alert("Mohon upload dan edit gambar Anda terlebih dahulu.");
         return;
     }
 
-    // Logic berbagi gambar tetap sama
-    // ... (kode berbagi gambar)
-    alert("Fitur berbagi sedang diproses. Silakan unduh manual jika gagal.");
+    if (navigator.canShare && navigator.canShare({ files: [new File([""], "image.png", { type: "image/png" })] })) {
+        
+        getFinalCanvasBlob(async (blob) => {
+            if (!blob) return;
+            
+            try {
+                const file = new File([blob], 'twibbon-hasil.png', { type: 'image/png' });
+                await navigator.share({
+                    files: [file],
+                    title: 'Twibbon Keren!',
+                    text: 'Lihat hasil twibbon saya!',
+                    url: window.location.href,
+                });
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                     alert(`Gagal berbagi gambar. Error: ${error.message}`);
+                }
+            }
+        });
+
+    } 
+    else if (navigator.share) {
+         try {
+            await navigator.share({
+                title: 'Twibbon Keren!',
+                text: 'Saya sudah membuat twibbon! Silakan coba juga.',
+                url: window.location.href,
+            });
+        } catch (error) {
+             if (error.name !== 'AbortError') {
+                 alert(`Gagal berbagi link. Error: ${error.message}`);
+             }
+        }
+    } 
+    else {
+        alert("Browser Anda tidak mendukung fitur berbagi. Silakan unduh gambar dan bagikan secara manual.");
+    }
 }
 
 
@@ -481,7 +515,7 @@ dropArea.addEventListener('drop', e => {
   }
 });
 
-// Event listener tombol Unduh (DIPERBAIKI UNTUK TEXT & DISABLE)
+// Event listener tombol Unduh (DIPERBAIKI)
 downloadButton.addEventListener('click', () => {
     // 1. Ubah teks dan disable tombol secara permanen
     downloadButton.textContent = 'Memproses...';
@@ -513,9 +547,9 @@ shareButton.addEventListener('click', shareImage);
 // ==========================================================
 // --- FITUR GESER (PAN) DAN ZOOM (PINCH) ---
 // ==========================================================
-/* (Kode interaksi mouse dan sentuh tetap sama) */
 
 // --- MOUSE & PC ---
+
 canvas.addEventListener('wheel', e => {
     if (!container.classList.contains('uploaded')) return;
     e.preventDefault();
@@ -551,6 +585,7 @@ canvas.addEventListener('mouseleave', () => {
 });
 
 // --- TOUCH & MOBILE ---
+
 function getDistance(p1, p2) {
     return Math.sqrt(Math.pow(p2.clientX - p1.clientX, 2) + Math.pow(p2.clientY - p1.clientY, 2));
 }
