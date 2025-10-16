@@ -95,19 +95,17 @@ canvas:active {
     cursor: grabbing;
 }
 
-/* STYLING BARU UNTUK GRUP TOMBOL */
+/* GRUP TOMBOL FLEKSIBEL */
 .button-group {
-    /* Mengubah div ini menjadi container fleksibel */
     display: flex;
-    /* Memberi jarak atas */
     margin-top: 10px;
-    /* Memastikan tombol berada di kanan (atau memenuhi kontainer) */
     justify-content: space-between; 
 }
 
-/* Gaya Tombol Unduh: Fleksibel dan mengambil ruang */
+/* Tombol Unduh: Fleksibel dan mengambil ruang. Default Dihilangkan (display: none). */
 #downloadButton {
-    display: none; /* Disembunyikan secara default */
+    /* PENTING: display: none akan diatur oleh JavaScript */
+    display: none; 
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
@@ -115,31 +113,25 @@ canvas:active {
     color: white;
     border: none;
     border-radius: 4px;
-    /* Mengambil sisa ruang yang tersedia */
     flex-grow: 1; 
-    /* Jarak dengan tombol bagikan */
     margin-right: 10px; 
-    /* Menggunakan flex agar display block disematkan saat visible */
-    display: none; 
 }
 
-/* Gaya Tombol Bagikan: Persegi 40x40px */
+/* Tombol Bagikan: Persegi 40x40px. Default Dihilangkan (display: none). */
 #shareButton {
-    display: none; /* Disembunyikan secara default */
+    /* PENTING: display: flex akan diatur oleh JavaScript */
+    display: none; 
     width: 40px; 
     height: 40px; 
     padding: 0;
-    font-size: 18px; /* Ukuran ikon */
+    font-size: 18px; 
     cursor: pointer;
-    background-color: #1DA1F2; /* Warna sosial media/bagikan */
+    background-color: #1DA1F2;
     color: white;
     border: none;
     border-radius: 4px;
-    /* Flex untuk menengahkan ikon */
-    display: flex; 
     align-items: center;
     justify-content: center;
-    /* Memastikan tombol tidak menyusut */
     flex-shrink: 0; 
 }
 
@@ -174,7 +166,7 @@ const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 const canvas = document.getElementById('canvas');
 const downloadButton = document.getElementById('downloadButton');
-const shareButton = document.getElementById('shareButton'); // Tombol Bagikan
+const shareButton = document.getElementById('shareButton');
 const ctx = canvas.getContext('2d');
 const TWIBBON_URL = "twibbon.png"; 
 const PLACEHOLDER_URL = "placeholder.png"; 
@@ -237,7 +229,7 @@ const resetToInitialState = (errorMessage = null) => {
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
     
-    // Sembunyikan kedua tombol
+    // Pastikan kedua tombol disembunyikan
     downloadButton.style.display = 'none';
     shareButton.style.display = 'none'; 
 
@@ -275,8 +267,9 @@ function mergeImages(userImgSrc) {
     container.classList.add('uploaded'); 
     container.style.cursor = 'default'; 
     
-    // Tampilkan kedua tombol saat gambar selesai diunggah
+    // Tampilkan tombol unduh (menggunakan 'block')
     downloadButton.style.display = 'block';
+    // Tampilkan tombol bagikan (menggunakan 'flex' karena ada centring icon)
     shareButton.style.display = 'flex'; 
 
     renderCanvas();
@@ -294,7 +287,7 @@ function mergeImages(userImgSrc) {
   twibbonImage.src = TWIBBON_URL;
 }
 
-// --- FUNGSI DOWNLOAD & SHARE ---
+// --- FUNGSI DOWNLOAD & SHARE (TIDAK BERUBAH) ---
 
 function getFinalCanvasBlob(callback) {
     if (!container.classList.contains('uploaded')) return;
@@ -326,7 +319,6 @@ function getFinalCanvasBlob(callback) {
 
     finalCtx.drawImage(twibbonImage, 0, 0, finalSize, finalSize);
 
-    // Mengambil blob dari canvas untuk download/share
     finalCanvas.toBlob(callback, 'image/png');
 }
 
@@ -336,7 +328,6 @@ async function shareImage() {
         return;
     }
 
-    // 1. Cek Web Share API dengan file
     if (navigator.canShare && navigator.canShare({ files: [new File([""], "image.png", { type: "image/png" })] })) {
         
         getFinalCanvasBlob(async (blob) => {
@@ -360,7 +351,6 @@ async function shareImage() {
         });
 
     } 
-    // 2. Fallback untuk Web Share API dasar (hanya link/teks)
     else if (navigator.share) {
          try {
             await navigator.share({
@@ -376,14 +366,13 @@ async function shareImage() {
              }
         }
     } 
-    // 3. Fallback jika tidak ada Web Share API
     else {
         alert("Browser Anda tidak mendukung fitur berbagi. Silakan unduh gambar dan bagikan secara manual.");
     }
 }
 
 
-// --- Event Listeners Dll (Tidak Berubah) ---
+// --- Event Listeners Dll (TIDAK BERUBAH) ---
 
 document.addEventListener('DOMContentLoaded', () => {
     image.onerror = () => {
@@ -394,6 +383,10 @@ document.addEventListener('DOMContentLoaded', () => {
     image.src = PLACEHOLDER_URL; 
     container.classList.remove('uploaded');
     container.style.cursor = 'default';
+    
+    // PENTING: Sembunyikan tombol saat DOMContentLoaded
+    downloadButton.style.display = 'none';
+    shareButton.style.display = 'none';
 });
 
 // Mengelola efek hover/blur dan aktivasi dropArea
