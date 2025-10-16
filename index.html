@@ -1,185 +1,223 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 5em auto;
-  padding: 2em;
-}
-
-.container {
-  position: relative;
-  width: 100%;
-  max-width: 400px;
-  margin: auto;
-  cursor: none;
-  overflow: hidden;
-}
-
-/* Gambar placeholder */
-.image {
-  display: block;
-  width: 100%;
-  height: auto;
-  pointer-events: none;
-  transition: opacity 0.3s ease, filter 0.3s ease;
-}
-
-/* Hover effect hanya jika drop area tidak aktif */
-.container:not(.uploaded):hover .image {
-  filter: blur(3px);
-  opacity: 0.7;
-}
-
-/* Overlay / drop area */
-.middle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  aspect-ratio: 1 / 1;
-  background: rgba(255, 255, 255, 0.5); /* putih transparan */
-  backdrop-filter: blur(8px);
-  border: 2px solid rgba(0,0,0,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #333;
-  cursor: pointer;
-  pointer-events: none;
-  user-select: none;
-  opacity: 0;
-  transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
-}
-
-.middle.active {
-  pointer-events: auto;
-  opacity: 1;
-}
-
-.middle.dragover {
-  background-color: rgba(255,255,255,0.7);
-  border-color: #04AA6D;
-}
-
-/* Canvas untuk gabungkan user + twibbon */
-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: none; /* tampil setelah upload */
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twibbon Uploader</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        #container {
+            width: 400px; /* Contoh: Berikan ukuran pada container */
+            height: 400px; /* Contoh: Berikan ukuran pada container */
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden; /* Penting untuk canvas */
+            cursor: pointer;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        #container.uploaded {
+            border-style: solid;
+            border-color: #3f51b5;
+        }
+        .image {
+            max-width: 100%;
+            max-height: 100%;
+            display: block; /* Pastikan ini terlihat default */
+            object-fit: contain;
+        }
+        #dropArea {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-size: 1.2em;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 10;
+        }
+        #dropArea.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        #dropArea.dragover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        #fileInput {
+            display: none;
+        }
+        #canvas {
+            display: none; /* Sembunyikan canvas secara default */
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .placeholder-text {
+            color: #888;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
-<h2>Upload Gambar Aman + Preview Asli</h2>
-<p>Hover di placeholder blur, setelah upload gambar asli tampil dan drop area hilang.</p>
+    <div id="container">
+        <div id="dropArea">
+            Seret & Jatuhkan Gambar Anda di Sini<br>atau Klik untuk Memilih
+        </div>
+        <input type="file" id="fileInput" accept="image/*">
+        <div class="placeholder-text">Klik untuk mengunggah gambar Anda</div>
+        <!-- Placeholder for initial image if any, or just empty if no initial image -->
+        <img src="" alt="Gambar Anda" class="image" style="display:none;"> 
+        <canvas id="canvas"></canvas>
+    </div>
 
-<div class="container" id="container">
-  <img src="placeholder.png" alt="Avatar" class="image">
-  <div class="middle" id="dropArea">Klik atau seret disini</div>
-  <canvas id="canvas"></canvas>
-</div>
+    <script>
+        const container = document.getElementById('container');
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const image = document.querySelector('.image'); // Ini akan menjadi placeholder kalau canvas belum ada
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const TWIBBON_URL = "twibbon.png"; // Pastikan path ini benar!
 
-<input type="file" id="fileInput" style="display:none" accept="image/*">
+        function mergeImages(userImgSrc) {
+            const userImg = new Image();
+            const twibbon = new Image();
+            let imagesLoaded = 0; // Hitung gambar yang sudah dimuat
 
-<script>
-const container = document.getElementById('container');
-const dropArea = document.getElementById('dropArea');
-const fileInput = document.getElementById('fileInput');
-const image = document.querySelector('.image');
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const TWIBBON_URL = "twibbon.png"; // pastikan ada di folder sama, atau path benar
+            // Fungsi untuk memeriksa apakah kedua gambar sudah dimuat
+            const checkAndDraw = () => {
+                imagesLoaded++;
+                if (imagesLoaded === 2) {
+                    // Semua gambar sudah dimuat, sekarang gambar di canvas
 
-function mergeImages(userImgSrc) {
-  const userImg = new Image();
-  const twibbon = new Image();
-  let loadedCount = 0;
+                    // Ukur canvas sesuai container
+                    // Pastikan container memiliki ukuran yang ditentukan di CSS
+                    const rect = container.getBoundingClientRect();
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
 
-  function drawIfReady() {
-    loadedCount++;
-    if (loadedCount < 2) return;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height); // Bersihkan canvas
 
-    // ukur canvas sesuai container
-    const rect = container.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+                    // Gambar user proporsional & center
+                    // Hitung rasio untuk memastikan gambar user pas di canvas
+                    const userRatio = Math.min(canvas.width / userImg.width, canvas.height / userImg.height);
+                    const userScaledWidth = userImg.width * userRatio;
+                    const userScaledHeight = userImg.height * userRatio;
+                    const userX = (canvas.width - userScaledWidth) / 2;
+                    const userY = (canvas.height - userScaledHeight) / 2;
+                    ctx.drawImage(userImg, userX, userY, userScaledWidth, userScaledHeight);
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    // Gambar twibbon di atas user, mengisi seluruh canvas
+                    ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
 
-    // gambar user proporsional & center
-    const scale = Math.min(canvas.width / userImg.width, canvas.height / userImg.height);
-    const x = (canvas.width - userImg.width * scale) / 2;
-    const y = (canvas.height - userImg.height * scale) / 2;
-    ctx.drawImage(userImg, x, y, userImg.width * scale, userImg.height * scale);
+                    // Tampilkan canvas, sembunyikan placeholder & drop area
+                    canvas.style.display = 'block';
+                    image.style.display = 'none'; // Sembunyikan elemen <img> jika ada
+                    dropArea.style.display = 'none'; // Sembunyikan dropArea
+                    container.classList.add('uploaded'); // Tambahkan kelas untuk styling
+                    document.querySelector('.placeholder-text').style.display = 'none'; // Sembunyikan teks placeholder
+                }
+            };
 
-    // gambar twibbon di atas user
-    ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
+            // Tambahkan crossOrigin hanya jika gambar berasal dari domain berbeda
+            // Jika twibbon.png ada di domain yang sama, ini tidak mutlak perlu
+            // userImg.crossOrigin = "anonymous"; // Biarkan ini jika kamu mengantisipasi user upload dari URL
+            twibbon.crossOrigin = "anonymous"; // Penting jika twibbon.png bisa dari domain lain
 
-    // tampilkan canvas, sembunyikan placeholder & drop area
-    canvas.style.display = 'block';
-    image.style.display = 'none';
-    dropArea.style.display = 'none';
-    container.classList.add('uploaded');
-  }
+            userImg.onload = checkAndDraw;
+            userImg.onerror = () => {
+                alert('Gagal memuat gambar pengguna. Pastikan itu adalah gambar yang valid.');
+                imagesLoaded = -Infinity; // Mencegah checkAndDraw dipanggil jika ada error
+            };
+            userImg.src = userImgSrc;
 
-  // pastikan crossOrigin supaya canvas bisa draw image tanpa masalah
-  userImg.crossOrigin = "anonymous";
-  twibbon.crossOrigin = "anonymous";
+            twibbon.onload = checkAndDraw;
+            twibbon.onerror = () => {
+                alert('Gagal memuat twibbon. Pastikan file "twibbon.png" ada dan path-nya benar.');
+                imagesLoaded = -Infinity; // Mencegah checkAndDraw dipanggil jika ada error
+            };
+            twibbon.src = TWIBBON_URL;
+        }
 
-  userImg.onload = drawIfReady;
-  userImg.onerror = () => alert('Gagal load gambar user!');
-  userImg.src = userImgSrc;
+        // Klik container → aktifkan overlay
+        container.addEventListener('click', () => {
+            // Hanya tampilkan dropArea jika belum ada gambar yang diupload
+            if (!container.classList.contains('uploaded')) {
+                dropArea.classList.add('active');
+            }
+        });
 
-  twibbon.onload = drawIfReady;
-  twibbon.onerror = () => alert('Gagal load twibbon!');
-  twibbon.src = TWIBBON_URL;
-}
+        // Klik drop area → file dialog
+        dropArea.addEventListener('click', e => {
+            e.stopPropagation(); // Mencegah event click di container ikut terpanggil
+            fileInput.click();
+        });
 
-// klik container → aktifkan overlay
-container.addEventListener('click', () => dropArea.classList.add('active'));
+        // Upload file
+        fileInput.addEventListener('change', e => {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = ev => mergeImages(ev.target.result);
+                reader.readAsDataURL(e.target.files[0]);
+                dropArea.classList.remove('active'); // Sembunyikan dropArea setelah memilih file
+            }
+        });
 
-// klik drop area → file dialog
-dropArea.addEventListener('click', e => {
-  e.stopPropagation();
-  fileInput.click();
-});
+        // Drag & Drop
+        dropArea.addEventListener('dragover', e => {
+            e.preventDefault(); // Penting untuk mengizinkan drop
+            if (!dropArea.classList.contains('active')) {
+                dropArea.classList.add('active'); // Aktifkan dropArea jika belum aktif
+            }
+            dropArea.classList.add('dragover');
+        });
 
-// upload file
-fileInput.addEventListener('change', e => {
-  if (e.target.files && e.target.files[0]) {
-    const reader = new FileReader();
-    reader.onload = ev => mergeImages(ev.target.result);
-    reader.readAsDataURL(e.target.files[0]);
-  }
-});
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('dragover');
+        });
 
-// drag & drop
-dropArea.addEventListener('dragover', e => {
-  if (!dropArea.classList.contains('active')) return;
-  e.preventDefault();
-  dropArea.classList.add('dragover');
-});
+        dropArea.addEventListener('drop', e => {
+            e.preventDefault(); // Penting untuk mengizinkan drop
+            dropArea.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                const reader = new FileReader();
+                reader.onload = ev => mergeImages(ev.target.result);
+                reader.readAsDataURL(e.dataTransfer.files[0]);
+                dropArea.classList.remove('active'); // Sembunyikan dropArea setelah drop
+            }
+        });
 
-dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+        // Menambahkan teks placeholder awal
+        document.addEventListener('DOMContentLoaded', () => {
+             // Pastikan elemen placeholder-text ada
+             if (document.querySelector('.placeholder-text')) {
+                document.querySelector('.placeholder-text').style.display = 'block';
+             }
+        });
 
-dropArea.addEventListener('drop', e => {
-  if (!dropArea.classList.contains('active')) return;
-  e.preventDefault();
-  dropArea.classList.remove('dragover');
-  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-    const reader = new FileReader();
-    reader.onload = ev => mergeImages(ev.target.result);
-    reader.readAsDataURL(e.dataTransfer.files[0]);
-  }
-});
-</script>
+    </script>
 </body>
 </html>
