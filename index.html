@@ -236,24 +236,34 @@ let drawState = {
     initialScale: 1
 };
 
-// Variabel untuk mengontrol transparansi twibbon
 let twibbonOpacity = 1.0; 
-const ACTIVE_OPACITY = 0.4; // Transparansi saat interaksi (0.4)
-const NORMAL_OPACITY = 1.0; // Transparansi normal (1.0)
+const ACTIVE_OPACITY = 0.4; 
+const NORMAL_OPACITY = 1.0; 
+
+// Variabel baru untuk mengontrol tampilan titik pusat
+let showCenterPoint = false; 
 
 let isDragging = false;
 let lastX = 0;
 let lastY = 0;
 let pointers = {};
 
-// --- FUNGSI BARU: Mengatur opacity twibbon dan me-render ulang ---
+// --- FUNGSI Mengatur opacity twibbon dan tampilan titik pusat ---
 function setInteractionMode(isActive) {
-    if (container.classList.contains('finished')) return; // Jangan ubah setelah download
+    if (container.classList.contains('finished')) return;
 
     const newOpacity = isActive ? ACTIVE_OPACITY : NORMAL_OPACITY;
     if (twibbonOpacity !== newOpacity) {
         twibbonOpacity = newOpacity;
-        // Panggil renderCanvas() hanya jika opacity berubah
+        // Panggil renderCanvas() saat opacity twibbon berubah
+        requestAnimationFrame(renderCanvas); 
+    }
+    
+    // Mengubah status titik pusat
+    const newCenterPointStatus = isActive;
+    if (showCenterPoint !== newCenterPointStatus) {
+        showCenterPoint = newCenterPointStatus;
+        // Panggil renderCanvas() saat status titik pusat berubah
         requestAnimationFrame(renderCanvas); 
     }
 }
@@ -279,10 +289,25 @@ function renderCanvas() {
     );
     ctx.restore();
 
-    // 2. Gambar Twibbon (Lapisan Atas) dengan Opacity yang diatur
+    // 2. Gambar Twibbon (Lapisan Atas) dengan Opacity
     ctx.globalAlpha = twibbonOpacity; 
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
     ctx.globalAlpha = 1.0; // Reset alpha
+
+    // 3. Gambar Titik Pusat JIKA showCenterPoint true
+    if (showCenterPoint) {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = 5; 
+        
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+        ctx.fillStyle = '#FFFFFF'; // Warna putih
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#333333'; // Garis tepi gelap
+        ctx.stroke();
+    }
 }
 
 // --- FUNGSI PENGELOLAAN STATE AWAL ---
@@ -292,7 +317,8 @@ const resetToInitialState = (errorMessage = null) => {
     userImage = null;
     twibbonImage = null;
     drawState = { x: 0, y: 0, scale: 1, rotation: 0, initialScale: 1 };
-    twibbonOpacity = NORMAL_OPACITY; // Reset opacity
+    twibbonOpacity = NORMAL_OPACITY; 
+    showCenterPoint = false; // Reset titik pusat
     
     image.src = PLACEHOLDER_URL; 
     image.style.display = 'block';
@@ -349,6 +375,7 @@ function mergeImages(userImgSrc) {
     downloadButton.textContent = 'Unduh Gambar';
     downloadButton.disabled = false;
     twibbonOpacity = NORMAL_OPACITY; 
+    showCenterPoint = false; // Pastikan mati saat load selesai
 
     renderCanvas();
   }
@@ -407,9 +434,10 @@ async function shareImage() {
         return;
     }
     
-    // Set opacity ke normal sebelum share
     const oldOpacity = twibbonOpacity;
+    const oldCenterPoint = showCenterPoint;
     twibbonOpacity = NORMAL_OPACITY; 
+    showCenterPoint = false;
     requestAnimationFrame(renderCanvas);
 
     if (navigator.canShare && navigator.canShare({ files: [new File([""], "image.png", { type: "image/png" })] })) {
@@ -432,6 +460,7 @@ async function shareImage() {
             } finally {
                 if (!container.classList.contains('finished')) {
                     twibbonOpacity = oldOpacity;
+                    showCenterPoint = oldCenterPoint;
                     requestAnimationFrame(renderCanvas);
                 }
             }
@@ -452,6 +481,7 @@ async function shareImage() {
         } finally {
              if (!container.classList.contains('finished')) {
                  twibbonOpacity = oldOpacity;
+                 showCenterPoint = oldCenterPoint;
                  requestAnimationFrame(renderCanvas);
              }
         }
@@ -460,13 +490,14 @@ async function shareImage() {
         alert("Browser Anda tidak mendukung fitur berbagi. Silakan unduh gambar dan bagikan secara manual.");
          if (!container.classList.contains('finished')) {
              twibbonOpacity = oldOpacity;
+             showCenterPoint = oldCenterPoint;
              requestAnimationFrame(renderCanvas);
          }
     }
 }
 
 
-// --- Event Listeners Dll (Kode Asli Anda) ---
+// --- Event Listeners Dll ---
 
 document.addEventListener('DOMContentLoaded', () => {
     image.onerror = () => {
@@ -553,6 +584,7 @@ downloadButton.addEventListener('click', () => {
     
     container.classList.add('finished');
     twibbonOpacity = NORMAL_OPACITY;
+    showCenterPoint = false; // Matikan titik pusat
     requestAnimationFrame(renderCanvas); 
 
     getFinalCanvasBlob((blob) => {
@@ -581,10 +613,9 @@ shareButton.addEventListener('click', shareImage);
 
 
 // ==========================================================
-// --- FITUR GESER (PAN) DAN ZOOM (PINCH) DENGAN PERBAIKAN BUG INIALISASI ---
+// --- FITUR GESER (PAN) DAN ZOOM (PINCH) ---
 // ==========================================================
 
-// PERBAIKAN BUG MOUSE GESER
 canvas.addEventListener('wheel', e => {
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
 
@@ -612,7 +643,6 @@ canvas.addEventListener('mousedown', e => {
     e.preventDefault();
     isDragging = true;
     
-    // PERBAIKAN: INISIALISASI lastX dan lastY dengan posisi mouse saat ini
     lastX = e.clientX;
     lastY = e.clientY;
     
@@ -629,7 +659,6 @@ canvas.addEventListener('mousemove', e => {
     drawState.x += dx;
     drawState.y += dy;
 
-    // PERBAIKAN: Update lastX dan lastY ke posisi baru
     lastX = e.clientX;
     lastY = e.clientY;
 
@@ -654,12 +683,10 @@ function getDistance(p1, p2) {
 let initialPinchDistance = null;
 let initialScale = 1;
 
-// PERBAIKAN BUG SENTUH
 canvas.addEventListener('touchstart', e => {
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
 
-    // PERBAIKAN: Reset pointers object (penting untuk menangani perpindahan jari)
     pointers = {};
     for (let i = 0; i < e.touches.length; i++) {
         pointers[e.touches[i].identifier] = e.touches[i];
@@ -669,13 +696,11 @@ canvas.addEventListener('touchstart', e => {
 
     if (touchCount === 1) {
         isDragging = true;
-        // PERBAIKAN: INISIALISASI lastX dan lastY dengan posisi sentuhan saat ini
         lastX = e.touches[0].clientX;
         lastY = e.touches[0].clientY;
         initialPinchDistance = null;
     } else if (touchCount === 2) {
         isDragging = false;
-        // PERBAIKAN: INISIALISASI PENTING untuk Zoom
         initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
         initialScale = drawState.scale;
     }
@@ -700,7 +725,6 @@ canvas.addEventListener('touchmove', e => {
         drawState.x += dx;
         drawState.y += dy;
 
-        // PERBAIKAN: Update lastX dan lastY ke posisi sentuhan baru
         lastX = currentPointers[0].clientX;
         lastY = currentPointers[0].clientY;
     } else if (touchCount === 2 && initialPinchDistance !== null) {
@@ -740,7 +764,6 @@ canvas.addEventListener('touchend', e => {
     if (touchCount === 1) {
         isDragging = true;
         const remainingTouch = Object.values(pointers)[0];
-        // PERBAIKAN: Update lastX dan lastY ke posisi jari yang tersisa
         lastX = remainingTouch.clientX;
         lastY = remainingTouch.clientY;
     }
@@ -754,4 +777,4 @@ canvas.addEventListener('touchcancel', () => {
 });
 </script>
 </body>
-  </html>
+      </html>
