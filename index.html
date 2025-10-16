@@ -6,83 +6,63 @@
 body {
   margin: 5em auto;
   padding: 2em;
-  font-family: sans-serif;
 }
-
 .container {
   position: relative;
   width: 100%;
-  max-width: 400px;
-  margin: auto;
 }
 
 .image {
+  opacity: 1;
   display: block;
   width: 100%;
   height: auto;
+  transition: .5s ease;
+  backface-visibility: hidden;
 }
 
-/* Overlay placeholder */
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.2);
-  display: none; /* tersembunyi awal */
-  z-index: 10;
-}
-
-/* Drop area */
-.drop-area {
+.middle {
+  transition: .5s ease;
+  opacity: 0;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 80%;
-  aspect-ratio: 1 / 1;
+  -ms-transform: translate(-50%, -50%);
+  text-align: center;
+  width: 80%;          /* skala 80% dari container */
+  aspect-ratio: 1 / 1; /* rasio 1x1 */
   background-color: #fff;
   border: 2px solid rgba(0,0,0,0.5);
-  display: none; /* tersembunyi awal */
+  display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  cursor: pointer;
-  font-size: 16px;
   color: #333;
-  z-index: 20;
+  cursor: pointer;
 }
 
-/* ketika overlay aktif, drop area muncul */
-.container.show-drop .overlay {
-  display: block;
+.container:hover .image {
+  opacity: 0.3;
 }
 
-.container.show-drop .drop-area {
-  display: flex;
+.container:hover .middle {
+  opacity: 1;
 }
+
+/* hapus styling .text, karena sekarang drop area langsung di middle */
 </style>
 </head>
 <body>
 
-<h2>Drop Area Example</h2>
-<p>Overlay muncul dulu, baru drop area.</p>
+<h2>Opacity with Box</h2>
+<p>Hover over the image to see the effect.</p>
 
-<div class="container" id="container">
-  <img src="placeholder.png" alt="Avatar" class="image">
-  <div class="overlay"></div>
-  <div class="drop-area">Seret atau ketuk disini</div>
+<div class="container">
+  <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
+  <div class="middle">
+    Seret atau ketuk disini
+  </div>
 </div>
-
-<script>
-const container = document.getElementById('container');
-
-// simulasi overlay aktif (misal setelah klik gambar)
-container.addEventListener('click', () => {
-  container.classList.toggle('show-drop');
-});
-</script>
-
+  
 </body>
 </html>
