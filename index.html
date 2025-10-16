@@ -222,11 +222,10 @@ const downloadButton = document.getElementById('downloadButton');
 const shareButton = document.getElementById('shareButton');
 const ctx = canvas.getContext('2d');
 const TWIBBON_URL = "twibbon.png"; 
-const PLACEHOLDER_URL = "placeholder.png"; 
+// const PLACEHOLDER_URL = "placeholder.png"; // Tidak digunakan lagi untuk performa
 
-// Variabel global
 let userImage = null; 
-let twibbonImage = null; // Dideklarasikan, tetapi src-nya dimuat belakangan (lazy load)
+let twibbonImage = null; 
 let drawState = {
     x: 0,
     y: 0,
@@ -328,7 +327,7 @@ const resetToInitialState = (errorMessage = null) => {
     twibbonOpacity = NORMAL_OPACITY; 
     showGuideLines = false; 
     
-    // Placeholder menggunakan data URI yang sangat ringan (sudah ada di HTML)
+    // PERBAIKAN: Gunakan Data URI yang sangat ringan untuk memastikan placeholder muncul.
     image.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; 
     image.style.display = 'block';
     image.style.filter = 'none'; 
@@ -353,7 +352,7 @@ const resetToInitialState = (errorMessage = null) => {
 // --- FUNGSI MERGE IMAGES (TERMASUK LAZY LOAD TWIBBON) ---
 function mergeImages(userImgSrc) {
   userImage = new Image();
-  twibbonImage = new Image(); // Inisialisasi di sini (lazy load)
+  twibbonImage = new Image(); 
   let imagesLoaded = 0; 
 
   function drawIfReady() {
@@ -403,13 +402,13 @@ function mergeImages(userImgSrc) {
   twibbonImage.src = TWIBBON_URL;
 }
 
-// --- FUNGSI DOWNLOAD & SHARE (MENGGUNAKAN FINAL CANVAS) ---
+// --- FUNGSI DOWNLOAD & SHARE ---
 function getFinalCanvasBlob(callback) {
     if (!container.classList.contains('uploaded')) return;
     
     const finalCanvas = document.createElement('canvas');
     const finalCtx = finalCanvas.getContext('2d');
-    const finalSize = 800; // Ukuran output yang baik
+    const finalSize = 800; 
     finalCanvas.width = finalSize;
     finalCanvas.height = finalSize;
 
@@ -446,7 +445,6 @@ async function shareImage() {
         return;
     }
     
-    // Matikan fitur bantu sebelum berbagi
     const oldOpacity = twibbonOpacity;
     const oldGuideLines = showGuideLines;
     twibbonOpacity = NORMAL_OPACITY; 
@@ -471,7 +469,6 @@ async function shareImage() {
                      alert(`Gagal berbagi gambar. Error: ${error.message}`);
                 }
             } finally {
-                // Kembalikan fitur bantu
                 if (!container.classList.contains('finished')) {
                     twibbonOpacity = oldOpacity;
                     showGuideLines = oldGuideLines;
@@ -481,7 +478,6 @@ async function shareImage() {
         });
     } else {
         alert("Browser Anda tidak mendukung fitur berbagi. Silakan unduh gambar dan bagikan secara manual.");
-        // Kembalikan fitur bantu
         if (!container.classList.contains('finished')) {
              twibbonOpacity = oldOpacity;
              showGuideLines = oldGuideLines;
@@ -494,8 +490,7 @@ async function shareImage() {
 // --- Event Listeners Awal ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Hanya mengatur placeholder jika ada placeholder.png (jika tidak, pakai data URI di HTML)
-    // image.src = PLACEHOLDER_URL; 
+    // Pastikan image.src sudah diatur di HTML sebagai Data URI yang ringan
     container.classList.remove('uploaded');
     container.style.cursor = 'default';
     
