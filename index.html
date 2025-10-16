@@ -16,13 +16,13 @@ body {
   margin: auto;
 }
 
-/* image tetap terlihat tapi tidak bisa diklik */
+/* Gambar terlihat tapi klik diblok total sebelum overlay aktif */
 .image {
   display: block;
   width: 100%;
   height: auto;
   transition: 0.5s ease;
-  pointer-events: none; /* klik di image tidak memicu upload */
+  pointer-events: none; /* klik di placeholder TIDAK TERBACA */
 }
 
 /* overlay di tengah */
@@ -48,14 +48,14 @@ body {
 }
 
 .container:hover .image {
-  opacity: 0.3;
+  opacity: 0.3; /* visual hover tetap */
 }
 
 .container:hover .middle {
   opacity: 1; /* visual overlay muncul */
 }
 
-/* overlay benar-benar aktif saat user klik overlay */
+/* Hanya overlay aktif pointer-events saat .active */
 .middle.active {
   pointer-events: auto;
 }
@@ -69,7 +69,7 @@ body {
 <body>
 
 <h2>Drop Area Aman</h2>
-<p>Klik placeholder tidak memicu upload. Upload hanya bisa setelah user klik overlay.</p>
+<p>Klik di gambar **tidak akan memicu upload**. Hanya klik overlay setelah muncul yang bisa memicu upload.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -84,14 +84,24 @@ const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 const container = document.getElementById('container');
 
-// Klik overlay untuk mengaktifkan pointer-events
-dropArea.addEventListener('click', (e) => {
-  // jika overlay belum aktif, aktifkan pointer-events tapi jangan langsung upload
+// Overlay hanya muncul visual saat hover, **tetap nonaktif klik sampai user aktifkan**
+container.addEventListener('mouseenter', () => {
+  // overlay muncul secara visual
+  // pointer-events tetap mati sampai user klik overlay
+});
+
+container.addEventListener('mouseleave', () => {
+  dropArea.classList.remove('active'); // matikan pointer-events overlay
+});
+
+// Klik overlay untuk memicu upload
+dropArea.addEventListener('click', () => {
+  // Aktifkan overlay hanya saat pointer-events, klik berikutnya memicu file input
   if (!dropArea.classList.contains('active')) {
     dropArea.classList.add('active'); 
-    return; // klik pertama hanya mengaktifkan overlay
+    return; // klik pertama hanya mengaktifkan overlay pointer-events
   }
-  // klik kedua (overlay sudah aktif) → buka file dialog
+  // Klik kedua → buka file dialog
   fileInput.click();
 });
 
