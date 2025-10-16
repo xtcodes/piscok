@@ -5,56 +5,50 @@
 <title>Twibbon Uploader</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-/* --- CSS LAYOUT MODAL/DIALOG ALA GITHUB --- */
+/* --- CSS LAYOUT MODAL/DIALOG ALA GITHUB (PERBAIKAN RESPONSIVITAS) --- */
 body {
   font-family: Arial, sans-serif;
-  padding: 0; /* Hapus padding body */
-  margin: 0; /* Hapus margin body */
-  background-color: #ffffff; /* Biarkan body putih */
-  /* Tinggi minimum penuh layar agar dialog bisa terpusat */
+  padding: 0; 
+  margin: 0; 
+  background-color: #ffffff; 
   min-height: 100vh;
-  display: flex; /* Tambahkan flex untuk menampung overlay */
-  align-items: flex-start; /* Konten di awal */
+  display: flex; 
+  align-items: flex-start; 
 }
 
-/* OVERLAY (AREA MERAH di SS) - Bertindak sebagai pusat dan lapisan transparan */
+/* OVERLAY (AREA MERAH di SS) */
 .dialog-overlay {
-    /* Mengambil ruang penuh viewport */
     position: fixed; 
     top: 0;
     left: 0;
     width: 100%;
     height: 100%; 
     
-    /* Warna latar belakang transparan/semitransparan seperti pada modal GitHub */
     background-color: rgba(0, 0, 0, 0.5); 
     
-    /* Pemusatan konten horizontal dan vertikal */
+    /* Perbaikan Pemusatan Vertikal (align-items: center) */
     display: flex;
     justify-content: center;
-    align-items: center; 
+    align-items: center; /* Konten dipusatkan secara vertikal */
     padding: 20px;
+    box-sizing: border-box; /* Agar padding tidak menyebabkan overflow */
     z-index: 1000;
 }
 
-/* KONTEN UTAMA (AREA BIRU di SS) - Kartu/Modal */
+/* KONTEN UTAMA (AREA BIRU di SS) - Modal/Card */
 .dialog-content {
-    background-color: #ffffff; /* Latar belakang putih solid */
-    border-radius: 8px; /* Sudut membulat */
-    /* Bayangan yang menonjolkan modal */
+    background-color: #ffffff; 
+    border-radius: 8px; 
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); 
     
-    /* Batasan lebar dialog */
-    width: 95%; 
+    width: 100%; /* Selalu 100% dari ruang yang tersedia di overlay */
     max-width: 500px; /* Batasan ukuran khas modal/dialog */
     
-    padding: 20px; /* Padding di dalam kartu */
+    padding: 20px; 
     box-sizing: border-box; 
     
-    /* Agar modal tidak menempel di atas (sedikit ruang) */
-    margin-top: -100px; 
+    margin-top: 0; /* Hapus margin negatif agar pemusatan vertikal oleh flex berfungsi */
     
-    /* Tambahkan scroll jika konten terlalu panjang */
     max-height: 90vh; 
     overflow-y: auto; 
 }
@@ -70,10 +64,12 @@ p {
 /* KARTU TWIBBON DI DALAM MODAL */
 .container {
   position: relative;
-  width: 100%;
-  max-width: 400px; /* Tetap 400px agar kotak */
-  margin: 0 auto 20px auto; /* Pusat horizontal dan margin bawah */
   
+  /* PERBAIKAN: Selalu 100% dari lebar parent (dialog-content) */
+  width: 100%; 
+  /* Batasan max-width Dihilangkan di sini */
+  
+  margin: 0 auto 20px auto; 
   aspect-ratio: 1 / 1; 
   
   cursor: default;
@@ -81,16 +77,15 @@ p {
   
   border: none; 
   border-radius: 12px; 
-  background-color: #f5f5f5; /* Sedikit abu-abu untuk kontras ringan */
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05); /* Bayangan dalam (opsional) */
+  background-color: #f5f5f5; 
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05); 
   transition: transform 0.3s ease-out; 
 }
 
-/* Efek Hover di dalam Modal */
 .container:not(.uploaded):hover {
   border-color: transparent; 
-  transform: none; /* Hilangkan efek angkat (terlalu banyak interaksi) */
-  box-shadow: 0 0 0 2px #04AA6D; /* Border solid saat hover */
+  transform: none; 
+  box-shadow: 0 0 0 2px #04AA6D; 
 }
 
 .image {
@@ -117,7 +112,7 @@ p {
   width: 80%;
   aspect-ratio: 1 / 1;
   background: rgba(255, 255, 255, 0.7); 
-  backdrop-filter: blur(5px); /* Kurangi blur */
+  backdrop-filter: blur(5px); 
   border: 2px dashed #007bff; 
   border-radius: 8px; 
   display: flex;
@@ -165,7 +160,7 @@ canvas:active {
 .button-group {
     display: flex;
     margin-top: 20px;
-    justify-content: flex-end; /* Pusatkan ke kanan seperti di dialog GitHub */
+    justify-content: flex-end; 
     gap: 10px;
 }
 
@@ -201,14 +196,15 @@ canvas:active {
     flex-shrink: 0; 
 }
 
-/* === MEDIA QUERY (Tidak diperlukan untuk modal terpusat, tapi biarkan jika ingin batas lebih lebar) === */
-@media (min-width: 600px) {
+/* === MEDIA QUERY UNTUK LAYAR MOBILE YANG SANGAT KECIL (<400px) === */
+@media (max-width: 400px) {
     .dialog-content {
-        max-width: 600px; 
+        /* Hapus padding samping di layar kecil agar twibbon lebih besar */
+        padding: 15px; 
     }
 }
 /* ======================================================= */
-</style>
+  </style>
 </head>
 <body>
 <div class="dialog-overlay"> 
