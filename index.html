@@ -14,15 +14,15 @@ body {
   width: 100%;
   max-width: 400px;
   margin: auto;
-  cursor: pointer; /* klik pertama untuk memunculkan overlay */
+  cursor: pointer;
 }
 
-/* Gambar terlihat tapi klik langsung tidak memicu upload */
+/* Gambar tetap terlihat tapi klik langsung tidak memicu upload */
 .image {
   display: block;
   width: 100%;
   height: auto;
-  pointer-events: none; /* klik di placeholder TIDAK TERBACA */
+  pointer-events: none;
   transition: 0.5s ease;
 }
 
@@ -43,14 +43,22 @@ body {
   align-items: center;
   justify-content: center;
   color: #333;
-  cursor: pointer;
-  pointer-events: none; /* pointer-events aktif hanya saat overlay aktif */
+  pointer-events: none; /* aktifkan hanya saat overlay aktif */
   user-select: none;
 }
 
-.middle.active {
+/* Efek hover visual */
+.container:hover .image {
+  opacity: 0.3;
+}
+
+.container:hover .middle {
   opacity: 1;
-  pointer-events: auto; /* klik overlay aktif */
+}
+
+/* Overlay aktif saat diklik */
+.middle.active {
+  pointer-events: auto; /* klik drop area aktif */
 }
 
 .middle.dragover {
@@ -62,7 +70,7 @@ body {
 <body>
 
 <h2>Upload Gambar Aman</h2>
-<p>Klik di placeholder pertama kali untuk menampilkan overlay. Upload hanya bisa melalui overlay.</p>
+<p>Hover untuk efek visual, klik di placeholder untuk menampilkan overlay. Upload hanya bisa melalui drop area.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -84,7 +92,7 @@ container.addEventListener('click', () => {
 
 // Klik di overlay → buka file dialog
 dropArea.addEventListener('click', (e) => {
-  e.stopPropagation(); // cegah bubbling ke container
+  e.stopPropagation(); // cegah bubbling
   fileInput.click();
 });
 
