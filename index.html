@@ -497,18 +497,19 @@ dropArea.addEventListener('drop', e => {
   }
 });
 
-// --- PERBAIKAN JAVASCRIPT: Tombol Unduh (Fokus ke disable permanen) ---
+// --- PERBAIKAN JAVASCRIPT: Tombol Unduh (Ganti Teks menjadi 'Selesai') ---
 downloadButton.addEventListener('click', () => {
     if (downloadButton.disabled) return; // Mencegah eksekusi jika sudah disabled
     
-    // 1. Ubah teks dan disabled tombol
+    // 1. Ubah teks dan disabled tombol saat mulai proses
     downloadButton.textContent = 'Diproses...';
-    downloadButton.disabled = true;
+    downloadButton.disabled = true; // Tetap disabled saat proses berlangsung
 
     getFinalCanvasBlob((blob) => {
         if (!blob) {
-            // Jika gagal membuat blob, biarkan tombol disabled sesuai permintaan
             console.error('Gagal membuat blob gambar.');
+            // Jika gagal, tampilkan 'Gagal!'
+            downloadButton.textContent = 'Gagal!';
             return;
         }
         
@@ -521,7 +522,9 @@ downloadButton.addEventListener('click', () => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
-        // Tombol tetap disabled setelah unduhan selesai (Teks tetap "Diproses...")
+        // 2. GANTI TEKS menjadi "Selesai" setelah unduhan berhasil
+        downloadButton.textContent = 'Selesai';
+        // Tombol tetap disabled
     });
 });
 // ---------------------------------------------------------------------
@@ -678,4 +681,4 @@ canvas.addEventListener('touchcancel', () => {
 });
 </script>
 </body>
-    </html>
+  </html>
