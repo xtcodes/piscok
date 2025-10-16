@@ -23,37 +23,31 @@ body {
     left: 0;
     width: 100%;
     height: 100%; 
-    
- /*   background-color: rgba(0, 0, 0, 0.5); */
-    
-    /* Perbaikan Pemusatan Vertikal (align-items: center) */
     display: flex;
     justify-content: center;
-    align-items: center; /* Konten dipusatkan secara vertikal */
+    align-items: center;
     padding: 20px;
-    box-sizing: border-box; /* Agar padding tidak menyebabkan overflow */
+    box-sizing: border-box;
     z-index: 1000;
 }
 
-/* KONTEN UTAMA (AREA BIRU di SS) - Modal/Card */
 .dialog-content {
-    background-color: #ffffff; 
+    background-color: #fdfdff; 
     border-radius: 8px; 
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); 
     
-    width: 100%; /* Selalu 100% dari ruang yang tersedia di overlay */
-    max-width: 500px; /* Batasan ukuran khas modal/dialog */
+    width: 100%;
+    max-width: 500px;
     
     padding: 20px; 
     box-sizing: border-box; 
     
-    margin-top: 0; /* Hapus margin negatif agar pemusatan vertikal oleh flex berfungsi */
+    margin-top: 0;
     
     max-height: 90vh; 
     overflow-y: auto; 
 }
 
-/* Judul dan Keterangan */
 h2 {
     margin-top: 0;
 }
@@ -61,20 +55,13 @@ p {
     margin-bottom: 20px;
 }
 
-/* KARTU TWIBBON DI DALAM MODAL */
 .container {
   position: relative;
-  
-  /* PERBAIKAN: Selalu 100% dari lebar parent (dialog-content) */
-  width: 100%; 
-  /* Batasan max-width Dihilangkan di sini */
-  
+  width: 100%;   
   margin: 0 auto 20px auto; 
-  aspect-ratio: 1 / 1; 
-  
+  aspect-ratio: 1 / 1;  
   cursor: default;
   overflow: hidden;
-  
   border: none; 
   border-radius: 12px; 
   background-color: #f0f0f2; 
@@ -103,7 +90,6 @@ p {
   opacity: 0.7;
 }
 
-/* Area Drop/Middle */
 .middle {
   position: absolute;
   top: 50%;
@@ -113,14 +99,12 @@ p {
   aspect-ratio: 1 / 1;
   background: rgba(255, 255, 255, 0.7); 
   backdrop-filter: blur(5px); 
- /* border: 2px dashed #007bff; */
   border-radius: 8px; 
   display: flex;
   align-items: center;
   justify-content: center;
   color: #333;
   cursor: pointer;
-  
   pointer-events: none; 
   user-select: none;
   opacity: 0;
@@ -137,7 +121,6 @@ p {
 
 .middle.dragover {
   background-color: rgba(255,255,255,0.9);
-/*  border-color: #04AA6D; */
 }
 
 canvas {
@@ -156,7 +139,6 @@ canvas:active {
     cursor: grabbing;
 }
 
-/* GRUP TOMBOL FLEKSIBEL */
 .button-group {
     display: flex;
     margin-top: 20px;
@@ -164,7 +146,6 @@ canvas:active {
     gap: 10px;
 }
 
-/* Tombol Unduh */
 #downloadButton {
     display: none; 
     padding: 10px 15px;
@@ -178,7 +159,6 @@ canvas:active {
     flex-grow: 0; 
 }
 
-/* Tombol Bagikan */
 #shareButton {
     display: none; 
     width: 40px; 
@@ -196,14 +176,12 @@ canvas:active {
     flex-shrink: 0; 
 }
 
-/* === MEDIA QUERY UNTUK LAYAR MOBILE YANG SANGAT KECIL (<400px) === */
 @media (max-width: 400px) {
     .dialog-content {
         /* Hapus padding samping di layar kecil agar twibbon lebih besar */
         padding: 15px; 
     }
 }
-/* ======================================================= */
   </style>
 </head>
 <body>
