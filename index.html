@@ -6,8 +6,9 @@
 <style>
 body {
   font-family: Arial, sans-serif;
-  margin: 4em auto;
+  margin: 5em auto;
   padding: 2em;
+  position: relative; /* Penting untuk partikel agar posisinya relatif terhadap body */
 }
 
 .container {
@@ -100,17 +101,49 @@ canvas:active {
     cursor: grabbing;
 }
 
-/* Tambahkan tombol Download */
+/* Tombol Download: fullwidth, margin top */
 #downloadButton {
     display: none;
-    margin-top: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
+    width: 100%; /* Fullwidth */
+    max-width: 400px; /* Ikuti max-width container */
+    margin: 10px auto 0 auto; /* Tengah + margin atas */
+    padding: 12px 20px; /* Padding sedikit lebih besar */
+    font-size: 18px; /* Ukuran font lebih besar */
     cursor: pointer;
     background-color: #04AA6D;
     color: white;
     border: none;
     border-radius: 4px;
+    box-sizing: border-box; /* Pastikan padding tidak menambah lebar */
+    transition: background-color 0.3s ease;
+}
+
+#downloadButton:hover {
+    background-color: #059b64;
+}
+
+/* Styling untuk partikel confetti */
+.confetti {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: #f00; /* Warna dasar, akan diubah random */
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    animation: fadeOutAndFall 1.5s forwards;
+    z-index: 1000; /* Pastikan di atas semua elemen */
+}
+
+@keyframes fadeOutAndFall {
+    0% {
+        opacity: 1;
+        transform: translateY(0px) rotateZ(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(150px) rotateZ(720deg);
+    }
 }
 </style>
 </head>
@@ -394,6 +427,9 @@ downloadButton.addEventListener('click', () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+
+        // Setelah berhasil diunduh, tampilkan confetti
+        showConfetti();
     }
 });
 
@@ -575,6 +611,41 @@ canvas.addEventListener('touchcancel', () => {
 // ==========================================================
 // --- END FITUR GESER (PAN) DAN ZOOM (PINCH) ---
 // ==========================================================
+
+// --- FUNGSI PARTIKEL CONFETTI ---
+function showConfetti() {
+    const containerRect = container.getBoundingClientRect();
+    const numberOfConfetti = 50; // Jumlah partikel
+    const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f']; // Warna-warna confetti
+
+    for (let i = 0; i < numberOfConfetti; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        
+        // Posisi awal partikel di tengah area preview
+        confetti.style.left = `${containerRect.left + containerRect.width / 2 + (Math.random() - 0.5) * 50}px`;
+        confetti.style.top = `${containerRect.top + containerRect.height / 2 + (Math.random() - 0.5) * 50}px`;
+        
+        // Warna random
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        // Ukuran random
+        const size = Math.random() * 8 + 4; // Ukuran 4-12px
+        confetti.style.width = `${size}px`;
+        confetti.style.height = `${size}px`;
+
+        // Offset animasi agar setiap partikel sedikit berbeda
+        confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+        confetti.style.animationDuration = `${1 + Math.random() * 0.5}s`; // Durasi animasi 1 - 1.5 detik
+        
+        document.body.appendChild(confetti);
+
+        // Hapus partikel setelah animasinya selesai
+        confetti.addEventListener('animationend', () => {
+            confetti.remove();
+        });
+    }
+}
 
 </script>
 </body>
