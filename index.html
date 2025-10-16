@@ -14,40 +14,41 @@ body {
   width: 100%;
   max-width: 400px;
   margin: auto;
-  cursor: pointer;
 }
 
-/* Gambar tetap terlihat tapi klik langsung tidak memicu upload */
+/* Gambar placeholder */
 .image {
   display: block;
   width: 100%;
   height: auto;
-  pointer-events: none;
+  pointer-events: none; /* klik tidak memicu upload */
   transition: 0.5s ease;
 }
 
-/* Overlay di tengah */
+/* Overlay */
 .middle {
-  transition: 0.5s ease;
-  opacity: 0;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  text-align: center;
   width: 80%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1/1;
   background-color: rgba(255,255,255,0.95);
   border: 2px solid rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #333;
-  pointer-events: none; /* aktifkan hanya saat overlay aktif */
+  cursor: pointer;
+  pointer-events: none; /* aktif hanya saat overlay aktif */
   user-select: none;
+  
+  /* Animasi smooth */
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-/* Efek hover visual */
+/* Hover visual untuk desktop */
 .container:hover .image {
   opacity: 0.3;
 }
@@ -56,21 +57,30 @@ body {
   opacity: 1;
 }
 
-/* Overlay aktif saat diklik */
+/* Overlay aktif (klik atau tap) */
 .middle.active {
-  pointer-events: auto; /* klik drop area aktif */
+  pointer-events: auto;
+  opacity: 1;
 }
 
 .middle.dragover {
   background-color: #f0f0f0;
   border-color: #04AA6D;
 }
+
+/* Mobile: touch effect */
+@media (hover: none) {
+  .container:hover .image,
+  .container:hover .middle {
+    opacity: 1; /* agar overlay muncul saat tap */
+  }
+}
 </style>
 </head>
 <body>
 
-<h2>Upload Gambar Aman</h2>
-<p>Hover untuk efek visual, klik di placeholder untuk menampilkan overlay. Upload hanya bisa melalui drop area.</p>
+<h2>Upload Gambar Aman & Smooth</h2>
+<p>Hover/tap untuk visual, klik di drop area untuk upload. Placeholder aman.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -110,6 +120,7 @@ fileInput.addEventListener('change', (e) => {
 
 // Drag & drop overlay
 dropArea.addEventListener('dragover', (e) => {
+  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.add('dragover');
 });
@@ -119,6 +130,7 @@ dropArea.addEventListener('dragleave', () => {
 });
 
 dropArea.addEventListener('drop', (e) => {
+  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.remove('dragover');
   const files = e.dataTransfer.files;
