@@ -16,14 +16,13 @@ body {
   margin: auto;
 }
 
-/* image tetap terlihat tapi tidak bisa diklik */
+/* image tetap terlihat tapi **klik diblok total** */
 .image {
   display: block;
   width: 100%;
   height: auto;
   transition: .5s ease;
-  backface-visibility: hidden;
-  pointer-events: none; /* klik tidak memicu upload */
+  pointer-events: none; /* klik di image tidak akan memicu upload */
 }
 
 /* overlay di tengah */
@@ -56,7 +55,7 @@ body {
   opacity: 1;
 }
 
-/* aktifkan klik hanya saat overlay aktif */
+/* aktifkan klik hanya saat overlay muncul */
 .middle.active {
   pointer-events: auto;
 }
@@ -70,7 +69,7 @@ body {
 <body>
 
 <h2>Drop Area Hanya Aktif Saat Overlay</h2>
-<p>Klik di gambar **tidak akan memicu upload**. Drop area aktif hanya saat overlay muncul.</p>
+<p>Klik di placeholder **tidak memicu upload**. Drop area aktif hanya saat overlay muncul.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -85,18 +84,18 @@ const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 const container = document.getElementById('container');
 
-// Hanya aktifkan overlay saat hover (desktop)
+// Overlay hanya aktif saat hover
 container.addEventListener('mouseenter', () => {
-  dropArea.classList.add('active');
+  dropArea.classList.add('active'); // aktifkan klik overlay
 });
 
 container.addEventListener('mouseleave', () => {
-  dropArea.classList.remove('active');
+  dropArea.classList.remove('active'); // matikan klik overlay
 });
 
-// Klik hanya bisa di overlay aktif
+// Klik hanya di overlay yang aktif
 dropArea.addEventListener('click', () => {
-  if (!dropArea.classList.contains('active')) return; // aman
+  if (!dropArea.classList.contains('active')) return;
   fileInput.click();
 });
 
