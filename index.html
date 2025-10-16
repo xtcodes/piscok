@@ -14,8 +14,8 @@ body {
   width: 100%;
   max-width: 400px;
   margin: auto;
-  cursor: pointer; /* klik pertama untuk overlay */
-  overflow: hidden; /* untuk efek hover di gambar */
+  cursor: pointer;
+  overflow: hidden;
 }
 
 /* Gambar placeholder */
@@ -23,54 +23,53 @@ body {
   display: block;
   width: 100%;
   height: auto;
-  pointer-events: none; /* klik tidak memicu upload */
+  pointer-events: none;
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
-/* Overlay di tengah */
-.middle {
-  transition: 0.5s ease;
-  opacity: 0;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  width: 80%;
-  aspect-ratio: 1 / 1;
-  background-color: rgba(255,255,255,0.95);
-  border: 2px solid rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #333;
-  cursor: pointer;
-  pointer-events: none; /* aktif hanya saat overlay aktif */
-  user-select: none;
-}
-
-/* Hover effect untuk placeholder (gambar) saja */
+/* Hover effect untuk placeholder */
 .container:hover .image {
   filter: blur(3px);
   opacity: 0.7;
 }
 
-/* Overlay aktif saat klik */
+/* Overlay / drop area */
+.middle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  aspect-ratio: 1 / 1;
+  background: rgba(255, 255, 255, 0.5); /* putih transparan */
+  backdrop-filter: blur(8px); /* efek blur */
+  border: 2px solid rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  cursor: pointer;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+}
+
 .middle.active {
   pointer-events: auto;
   opacity: 1;
 }
 
 .middle.dragover {
-  background-color: #f0f0f0;
+  background-color: rgba(255,255,255,0.7);
   border-color: #04AA6D;
 }
 </style>
 </head>
 <body>
 
-<h2>Upload Gambar Aman + Hover di Placeholder</h2>
-<p>Hover di placeholder membuat gambar blur + semi-transparan, klik di placeholder menampilkan overlay. Upload hanya di drop area.</p>
+<h2>Upload Gambar Aman + Overlay Putih Blur</h2>
+<p>Hover di placeholder membuat gambar blur. Overlay drop area putih blur saat aktif.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -85,12 +84,12 @@ const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 
-// Klik pertama di placeholder → aktifkan overlay
+// Klik placeholder → aktifkan overlay
 container.addEventListener('click', () => {
   dropArea.classList.add('active');
 });
 
-// Klik di overlay → buka file dialog
+// Klik drop area → buka file dialog
 dropArea.addEventListener('click', (e) => {
   e.stopPropagation();
   fileInput.click();
@@ -108,7 +107,7 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// Drag & drop overlay
+// Drag & drop
 dropArea.addEventListener('dragover', (e) => {
   if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
