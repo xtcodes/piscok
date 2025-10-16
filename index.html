@@ -128,6 +128,13 @@ canvas {
   z-index: 5; 
   cursor: grab;
   touch-action: none;
+  /* Tambahkan transisi untuk efek halus */
+  transition: opacity 0.15s ease; 
+}
+
+/* --- CSS BARU: Twibbon menjadi transparan saat interaksi aktif --- */
+.container.interactive canvas {
+  opacity: 0.4; /* Opacity saat digeser/di-zoom */
 }
 
 canvas:active {
@@ -241,6 +248,19 @@ let lastX = 0;
 let lastY = 0;
 let pointers = {};
 
+// --- FUNGSI BARU: Mengelola class interaksi (transparansi) ---
+function setInteractionMode(isActive) {
+    if (isActive) {
+        container.classList.add('interactive');
+    } else {
+        // Hanya hapus jika sudah selesai interaksi DAN belum di-download (finished)
+        if (!container.classList.contains('finished')) {
+            container.classList.remove('interactive');
+        }
+    }
+}
+
+
 function renderCanvas() {
     if (!userImage || !twibbonImage || canvas.width <= 0 || canvas.height <= 0) return;
 
@@ -276,8 +296,8 @@ const resetToInitialState = (errorMessage = null) => {
     image.style.opacity = '1';
 
     canvas.style.display = 'none'; 
-    // Hapus class 'finished' saat reset untuk mengaktifkan kembali interaksi
     container.classList.remove('finished');
+    container.classList.remove('interactive'); // Reset class
     dropArea.classList.remove('active'); 
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
@@ -288,7 +308,6 @@ const resetToInitialState = (errorMessage = null) => {
     container.classList.remove('uploaded'); 
     container.style.cursor = 'default'; 
 
-    // PENTING: Reset tombol download ke kondisi tidak disabled saat upload baru
     downloadButton.textContent = 'Unduh Gambar';
     downloadButton.disabled = false;
 };
@@ -318,13 +337,13 @@ function mergeImages(userImgSrc) {
     dropArea.style.visibility = 'hidden';
     dropArea.classList.remove('active'); 
     container.classList.add('uploaded'); 
-    container.classList.remove('finished'); // Pastikan interaksi aktif saat upload
+    container.classList.remove('finished');
+    container.classList.remove('interactive'); // Reset class
     container.style.cursor = 'default'; 
     
     downloadButton.style.display = 'block';
     shareButton.style.display = 'flex'; 
 
-    // PENTING: Reset tombol download ke kondisi tidak disabled saat upload baru
     downloadButton.textContent = 'Unduh Gambar';
     downloadButton.disabled = false;
 
@@ -500,7 +519,7 @@ dropArea.addEventListener('drop', e => {
   }
 });
 
-// --- PERBAIKAN JAVASCRIPT: Tombol Unduh (Ganti Teks menjadi 'Selesai' dan Nonaktifkan Interaksi) ---
+// --- PERBAIKAN JAVASCRIPT: Tombol Unduh ---
 downloadButton.addEventListener('click', () => {
     if (downloadButton.disabled) return;
     
@@ -508,8 +527,9 @@ downloadButton.addEventListener('click', () => {
     downloadButton.textContent = 'Diproses...';
     downloadButton.disabled = true; 
     
-    // PENTING: TAMBAHKAN CLASS 'finished' UNTUK MENCEGAH INTERAKSI
+    // PENTING: Tambahkan class 'finished' untuk nonaktifkan interaksi permanen
     container.classList.add('finished');
+    container.classList.remove('interactive'); // Pastikan opacity kembali 1.0
 
     getFinalCanvasBlob((blob) => {
         if (!blob) {
@@ -539,14 +559,15 @@ shareButton.addEventListener('click', shareImage);
 
 
 // ==========================================================
-// --- FITUR GESER (PAN) DAN ZOOM (PINCH) (Kode Asli Anda) ---
+// --- FITUR GESER (PAN) DAN ZOOM (PINCH) DENGAN OPACITY ---
 // ==========================================================
-
-// Periksa class 'finished' untuk nonaktifkan interaksi
 
 canvas.addEventListener('wheel', e => {
     // Nonaktifkan jika class 'finished' ada
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
+
+    // Aktifkan mode interaktif saat zoom
+    setInteractionMode(true); 
 
     e.preventDefault();
     
@@ -558,6 +579,12 @@ canvas.addEventListener('wheel', e => {
     drawState.scale = newScale;
 
     renderCanvas();
+
+    // Matikan mode interaktif setelah jeda singkat (untuk jeda scroll)
+    clearTimeout(window.scrollTimer);
+    window.scrollTimer = setTimeout(() => {
+        setInteractionMode(false);
+    }, 150);
 });
 
 canvas.addEventListener('mousedown', e => {
@@ -567,6 +594,9 @@ canvas.addEventListener('mousedown', e => {
     isDragging = true;
     lastX = e.clientX;
     lastY = e.clientY;
+    
+    // Aktifkan mode interaktif saat drag mulai
+    setInteractionMode(true); 
 });
 
 canvas.addEventListener('mousemove', e => {
@@ -588,10 +618,14 @@ canvas.addEventListener('mousemove', e => {
 
 canvas.addEventListener('mouseup', () => {
     isDragging = false;
+    // Matikan mode interaktif saat drag selesai
+    setInteractionMode(false); 
 });
 
 canvas.addEventListener('mouseleave', () => {
     isDragging = false;
+    // Matikan mode interaktif saat mouse keluar
+    setInteractionMode(false); 
 });
 
 
@@ -623,6 +657,9 @@ canvas.addEventListener('touchstart', e => {
         initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
         initialScale = drawState.scale;
     }
+    
+    // Aktifkan mode interaktif saat sentuhan/pinch mulai
+    setInteractionMode(true);
 });
 
 canvas.addEventListener('touchmove', e => {
@@ -677,6 +714,8 @@ canvas.addEventListener('touchend', e => {
     }
     if (touchCount === 0) {
         isDragging = false;
+        // Matikan mode interaktif saat sentuhan terakhir dilepas
+        setInteractionMode(false); 
     }
     
     if (touchCount === 1) {
@@ -691,7 +730,9 @@ canvas.addEventListener('touchcancel', () => {
     isDragging = false;
     pointers = {};
     initialPinchDistance = null;
+    // Matikan mode interaktif saat sentuhan dibatalkan
+    setInteractionMode(false); 
 });
 </script>
 </body>
-  </html>
+</html>
