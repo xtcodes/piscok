@@ -5,40 +5,35 @@
 <title>Twibbon Uploader</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-/* --- PERBAIKAN RESPONSIVITAS --- */
+/* --- Pengaturan Dasar Body & Wrapper --- */
 body {
   font-family: Arial, sans-serif;
-  /* Hapus margin auto dari body, cukup padding */
   padding: 1.5em;
 }
 
-/* Kontainer utama untuk membatasi lebar konten di desktop */
+/* Kontainer utama untuk membatasi lebar konten. Default: lebar penuh */
 .main-wrapper {
-    max-width: 600px; /* Batas lebar konten yang nyaman dibaca di desktop */
-    margin: 4em auto; /* Pusatkan seluruh wrapper di tengah layar */
+    width: 100%;
+    margin: 4em auto; /* Pusatkan seluruh wrapper */
 }
-/* --- END PERBAIKAN RESPONSIVITAS --- */
 
-
+/* --- Area Kontainer Twibbon (Default: 100% lebar, max 400px agar tidak terlalu besar di ponsel) --- */
 .container {
   position: relative;
   width: 100%;
-  /* Max-width 400px tetap dipertahankan untuk area twibbon agar tetap kotak */
-  max-width: 400px; 
-  /* Pusatkan kontainer twibbon di dalam main-wrapper */
+  max-width: 400px; /* Batasan di perangkat kecil agar tidak terlalu lebar */
   margin: auto; 
   
   aspect-ratio: 1 / 1; 
   
   cursor: default;
-  
   overflow: hidden;
   border: 2px dashed #ccc; 
   border-radius: 8px; 
   background-color: #f9f9f9; 
   transition: border-color 0.3s ease; 
 }
-
+/* ... (Gaya untuk .container:not(.uploaded):hover, .image, .middle, canvas, dan lainnya tetap sama) ... */
 .container:not(.uploaded):hover {
   border-color: #04AA6D; 
 }
@@ -115,13 +110,13 @@ canvas:active {
     margin-top: 10px;
     justify-content: space-between; 
     
-    /* PENTING: Batasi dan pusatkan grup tombol agar sejajar dengan .container (400px) */
+    /* Batasan di perangkat kecil agar sejajar dengan .container */
     max-width: 400px;
     margin-left: auto;
     margin-right: auto;
 }
 
-/* Tombol Unduh */
+/* Tombol Unduh & Bagikan (Gaya tetap sama) */
 #downloadButton {
     display: none; 
     padding: 10px 20px;
@@ -135,7 +130,6 @@ canvas:active {
     margin-right: 10px; 
 }
 
-/* Tombol Bagikan: Persegi 40x40px */
 #shareButton {
     display: none; 
     width: 40px; 
@@ -147,12 +141,31 @@ canvas:active {
     color: white;
     border: none;
     border-radius: 4px;
-    display: flex; /* Menggunakan flex di CSS karena nanti di-override oleh JS */
+    display: flex; 
     align-items: center;
     justify-content: center;
     flex-shrink: 0; 
 }
 
+
+/* === MEDIA QUERY UNTUK LAYAR DESKTOP (LEBAR > 768px) === */
+@media (min-width: 768px) {
+    /* 1. Atur lebar maksimum konten utama menjadi 800px */
+    .main-wrapper {
+        max-width: 800px; 
+    }
+
+    /* 2. Tingkatkan ukuran maksimum area twibbon menjadi 600px */
+    .container {
+        max-width: 600px; 
+    }
+    
+    /* 3. Tingkatkan ukuran maksimum grup tombol agar sejajar dengan kontainer baru (600px) */
+    .button-group {
+        max-width: 600px;
+    }
+}
+/* ======================================================= */
 </style>
 </head>
 <body>
@@ -249,7 +262,6 @@ const resetToInitialState = (errorMessage = null) => {
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
     
-    // Pastikan kedua tombol disembunyikan
     downloadButton.style.display = 'none';
     shareButton.style.display = 'none'; 
 
@@ -269,6 +281,7 @@ function mergeImages(userImgSrc) {
     imagesLoaded++;
     if (imagesLoaded < 2) return; 
 
+    // PENTING: Hitung ulang dimensi canvas, karena dimensi container bisa berubah karena media query
     const rect = container.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
@@ -287,9 +300,7 @@ function mergeImages(userImgSrc) {
     container.classList.add('uploaded'); 
     container.style.cursor = 'default'; 
     
-    // Tampilkan tombol unduh (menggunakan 'block')
     downloadButton.style.display = 'block';
-    // Tampilkan tombol bagikan (menggunakan 'flex' karena ada centring icon)
     shareButton.style.display = 'flex'; 
 
     renderCanvas();
@@ -307,14 +318,14 @@ function mergeImages(userImgSrc) {
   twibbonImage.src = TWIBBON_URL;
 }
 
-// --- FUNGSI DOWNLOAD & SHARE ---
+// --- FUNGSI DOWNLOAD & SHARE (TIDAK BERUBAH) ---
 
 function getFinalCanvasBlob(callback) {
     if (!container.classList.contains('uploaded')) return;
     
     const finalCanvas = document.createElement('canvas');
     const finalCtx = finalCanvas.getContext('2d');
-    const finalSize = 800;
+    const finalSize = 800; // Resolusi unduhan tetap 800px
     finalCanvas.width = finalSize;
     finalCanvas.height = finalSize;
 
@@ -322,7 +333,8 @@ function getFinalCanvasBlob(callback) {
     const finalUserScaledWidth = userImage.width * finalInitialScale * drawState.scale;
     const finalUserScaledHeight = userImage.height * finalInitialScale * drawState.scale;
     
-    const ratio = finalSize / canvas.width;
+    // Gunakan lebar container saat ini untuk menghitung rasio, yang mungkin 400px atau 600px
+    const ratio = finalSize / container.getBoundingClientRect().width; 
     const finalX = drawState.x * ratio;
     const finalY = drawState.y * ratio;
 
@@ -361,9 +373,7 @@ async function shareImage() {
                     text: 'Lihat hasil twibbon saya!',
                     url: window.location.href,
                 });
-                console.log('Berbagi berhasil!');
             } catch (error) {
-                console.error('Gagal berbagi:', error);
                 if (error.name !== 'AbortError') {
                      alert(`Gagal berbagi gambar. Error: ${error.message}`);
                 }
@@ -378,9 +388,7 @@ async function shareImage() {
                 text: 'Saya sudah membuat twibbon! Silakan coba juga.',
                 url: window.location.href,
             });
-            console.log('Berbagi link berhasil (fallback)!');
         } catch (error) {
-            console.error('Gagal berbagi link:', error);
              if (error.name !== 'AbortError') {
                  alert(`Gagal berbagi link. Error: ${error.message}`);
              }
@@ -392,11 +400,10 @@ async function shareImage() {
 }
 
 
-// --- Event Listeners Dll (Tidak Berubah) ---
+// --- Event Listeners Dll (TIDAK BERUBAH) ---
 
 document.addEventListener('DOMContentLoaded', () => {
     image.onerror = () => {
-        console.warn(`[ERROR] Placeholder image not found at: ${PLACEHOLDER_URL}. Using fallback background.`);
         image.src = ''; 
         image.alt = 'Gagal memuat placeholder';
     };
@@ -404,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
     container.classList.remove('uploaded');
     container.style.cursor = 'default';
     
-    // PENTING: Sembunyikan tombol saat DOMContentLoaded
     downloadButton.style.display = 'none';
     shareButton.style.display = 'none';
 });
@@ -498,7 +504,6 @@ shareButton.addEventListener('click', shareImage);
 
 // --- MOUSE & PC ---
 
-// 1. Zoom dengan Scroll
 canvas.addEventListener('wheel', e => {
     if (!container.classList.contains('uploaded')) return;
 
@@ -514,7 +519,6 @@ canvas.addEventListener('wheel', e => {
     renderCanvas();
 });
 
-// 2. Geser dengan Mouse Drag
 canvas.addEventListener('mousedown', e => {
     if (!container.classList.contains('uploaded')) return;
     e.preventDefault();
@@ -552,13 +556,6 @@ canvas.addEventListener('mouseleave', () => {
 
 function getDistance(p1, p2) {
     return Math.sqrt(Math.pow(p2.clientX - p1.clientX, 2) + Math.pow(p2.clientY - p1.clientY, 2));
-}
-
-function getCenter(p1, p2) {
-    return {
-        x: (p1.clientX + p2.clientX) / 2,
-        y: (p1.clientY + p2.clientY) / 2
-    };
 }
 
 let initialPinchDistance = null;
@@ -651,11 +648,6 @@ canvas.addEventListener('touchcancel', () => {
     pointers = {};
     initialPinchDistance = null;
 });
-
-// ==========================================================
-// --- END FITUR GESER (PAN) DAN ZOOM (PINCH) ---
-// ==========================================================
-
 </script>
 </body>
   </html>
