@@ -16,18 +16,18 @@ body {
   margin: auto;
 }
 
-/* image tetap terlihat tapi **klik diblok total** */
+/* image tetap terlihat tapi tidak bisa diklik */
 .image {
   display: block;
   width: 100%;
   height: auto;
-  transition: .5s ease;
-  pointer-events: none; /* klik di image tidak akan memicu upload */
+  transition: 0.5s ease;
+  pointer-events: none; /* klik di image tidak memicu upload */
 }
 
 /* overlay di tengah */
 .middle {
-  transition: .5s ease;
+  transition: 0.5s ease;
   opacity: 0;
   position: absolute;
   top: 50%;
@@ -52,10 +52,10 @@ body {
 }
 
 .container:hover .middle {
-  opacity: 1;
+  opacity: 1; /* visual overlay muncul */
 }
 
-/* aktifkan klik hanya saat overlay muncul */
+/* overlay benar-benar aktif saat user klik overlay */
 .middle.active {
   pointer-events: auto;
 }
@@ -68,8 +68,8 @@ body {
 </head>
 <body>
 
-<h2>Drop Area Hanya Aktif Saat Overlay</h2>
-<p>Klik di placeholder **tidak memicu upload**. Drop area aktif hanya saat overlay muncul.</p>
+<h2>Drop Area Aman</h2>
+<p>Klik placeholder tidak memicu upload. Upload hanya bisa setelah user klik overlay.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -84,22 +84,18 @@ const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 const container = document.getElementById('container');
 
-// Overlay hanya aktif saat hover
-container.addEventListener('mouseenter', () => {
-  dropArea.classList.add('active'); // aktifkan klik overlay
-});
-
-container.addEventListener('mouseleave', () => {
-  dropArea.classList.remove('active'); // matikan klik overlay
-});
-
-// Klik hanya di overlay yang aktif
-dropArea.addEventListener('click', () => {
-  if (!dropArea.classList.contains('active')) return;
+// Klik overlay untuk mengaktifkan pointer-events
+dropArea.addEventListener('click', (e) => {
+  // jika overlay belum aktif, aktifkan pointer-events tapi jangan langsung upload
+  if (!dropArea.classList.contains('active')) {
+    dropArea.classList.add('active'); 
+    return; // klik pertama hanya mengaktifkan overlay
+  }
+  // klik kedua (overlay sudah aktif) → buka file dialog
   fileInput.click();
 });
 
-// Pilih file melalui dialog
+// Pilih file
 fileInput.addEventListener('change', (e) => {
   if (e.target.files && e.target.files[0]) {
     const file = e.target.files[0];
@@ -111,7 +107,7 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// Drag & drop hanya aktif jika overlay aktif
+// Drag & drop hanya aktif jika overlay sudah diaktifkan user
 dropArea.addEventListener('dragover', (e) => {
   if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
@@ -127,7 +123,6 @@ dropArea.addEventListener('drop', (e) => {
   if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.remove('dragover');
-
   const files = e.dataTransfer.files;
   if (files && files[0]) {
     const reader = new FileReader();
@@ -138,6 +133,6 @@ dropArea.addEventListener('drop', (e) => {
   }
 });
 </script>
-  
+
 </body>
 </html>
