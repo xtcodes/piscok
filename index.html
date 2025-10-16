@@ -5,7 +5,7 @@
 <title>Twibbon Uploader</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-/* --- KODE CSS ASLI ANDA (Dikurangi style opacity yang salah) --- */
+/* --- KODE CSS ASLI ANDA --- */
 body {
   font-family: Arial, sans-serif;
   padding: 0; 
@@ -128,7 +128,6 @@ canvas {
   z-index: 5; 
   cursor: grab;
   touch-action: none;
-  /* Hapus opacity dari CSS */
 }
 
 canvas:active {
@@ -237,7 +236,7 @@ let drawState = {
     initialScale: 1
 };
 
-// Variabel baru untuk mengontrol transparansi twibbon
+// Variabel untuk mengontrol transparansi twibbon
 let twibbonOpacity = 1.0; 
 const ACTIVE_OPACITY = 0.4; // Transparansi saat interaksi (0.4)
 const NORMAL_OPACITY = 1.0; // Transparansi normal (1.0)
@@ -254,7 +253,8 @@ function setInteractionMode(isActive) {
     const newOpacity = isActive ? ACTIVE_OPACITY : NORMAL_OPACITY;
     if (twibbonOpacity !== newOpacity) {
         twibbonOpacity = newOpacity;
-        renderCanvas(); // Render ulang untuk menerapkan opacity baru
+        // Panggil renderCanvas() hanya jika opacity berubah
+        requestAnimationFrame(renderCanvas); 
     }
 }
 
@@ -280,9 +280,9 @@ function renderCanvas() {
     ctx.restore();
 
     // 2. Gambar Twibbon (Lapisan Atas) dengan Opacity yang diatur
-    ctx.globalAlpha = twibbonOpacity; // <--- INI PENTING!
+    ctx.globalAlpha = twibbonOpacity; 
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 1.0; // Reset alpha agar tidak mempengaruhi gambar berikutnya
+    ctx.globalAlpha = 1.0; // Reset alpha
 }
 
 // --- FUNGSI PENGELOLAAN STATE AWAL ---
@@ -348,7 +348,7 @@ function mergeImages(userImgSrc) {
 
     downloadButton.textContent = 'Unduh Gambar';
     downloadButton.disabled = false;
-    twibbonOpacity = NORMAL_OPACITY; // Pastikan normal saat awal
+    twibbonOpacity = NORMAL_OPACITY; 
 
     renderCanvas();
   }
@@ -365,7 +365,7 @@ function mergeImages(userImgSrc) {
   twibbonImage.src = TWIBBON_URL;
 }
 
-// --- FUNGSI DOWNLOAD & SHARE (DIUBAH UNTUK MENERAPKAN OPACITY NORMAL) ---
+// --- FUNGSI DOWNLOAD & SHARE ---
 
 function getFinalCanvasBlob(callback) {
     if (!container.classList.contains('uploaded')) return;
@@ -395,7 +395,6 @@ function getFinalCanvasBlob(callback) {
     );
     finalCtx.restore();
 
-    // Pastikan final canvas digambar dengan opacity normal (1.0)
     finalCtx.globalAlpha = 1.0; 
     finalCtx.drawImage(twibbonImage, 0, 0, finalSize, finalSize);
 
@@ -411,7 +410,7 @@ async function shareImage() {
     // Set opacity ke normal sebelum share
     const oldOpacity = twibbonOpacity;
     twibbonOpacity = NORMAL_OPACITY; 
-    renderCanvas(); // Update tampilan
+    requestAnimationFrame(renderCanvas);
 
     if (navigator.canShare && navigator.canShare({ files: [new File([""], "image.png", { type: "image/png" })] })) {
         
@@ -431,10 +430,9 @@ async function shareImage() {
                      alert(`Gagal berbagi gambar. Error: ${error.message}`);
                 }
             } finally {
-                // Kembalikan opacity setelah share selesai/gagal
                 if (!container.classList.contains('finished')) {
                     twibbonOpacity = oldOpacity;
-                    renderCanvas();
+                    requestAnimationFrame(renderCanvas);
                 }
             }
         });
@@ -452,19 +450,17 @@ async function shareImage() {
                  alert(`Gagal berbagi link. Error: ${error.message}`);
              }
         } finally {
-             // Kembalikan opacity setelah share selesai/gagal
              if (!container.classList.contains('finished')) {
                  twibbonOpacity = oldOpacity;
-                 renderCanvas();
+                 requestAnimationFrame(renderCanvas);
              }
         }
     } 
     else {
         alert("Browser Anda tidak mendukung fitur berbagi. Silakan unduh gambar dan bagikan secara manual.");
-         // Kembalikan opacity setelah alert
          if (!container.classList.contains('finished')) {
              twibbonOpacity = oldOpacity;
-             renderCanvas();
+             requestAnimationFrame(renderCanvas);
          }
     }
 }
@@ -548,18 +544,16 @@ dropArea.addEventListener('drop', e => {
   }
 });
 
-// --- PERBAIKAN JAVASCRIPT: Tombol Unduh ---
+// --- LISTENER TOMBOL UNDUH ---
 downloadButton.addEventListener('click', () => {
     if (downloadButton.disabled) return;
     
-    // 1. Ubah teks dan disabled tombol saat mulai proses
     downloadButton.textContent = 'Diproses...';
     downloadButton.disabled = true; 
     
-    // Nonaktifkan interaksi permanen & set opacity ke normal
     container.classList.add('finished');
     twibbonOpacity = NORMAL_OPACITY;
-    renderCanvas(); // Render terakhir untuk memastikan opacity 1.0
+    requestAnimationFrame(renderCanvas); 
 
     getFinalCanvasBlob((blob) => {
         if (!blob) {
@@ -577,9 +571,7 @@ downloadButton.addEventListener('click', () => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
-        // 2. GANTI TEKS menjadi "Selesai" setelah unduhan berhasil
         downloadButton.textContent = 'Selesai';
-        // Tombol tetap disabled
     });
 });
 // ---------------------------------------------------------------------
@@ -589,15 +581,13 @@ shareButton.addEventListener('click', shareImage);
 
 
 // ==========================================================
-// --- FITUR GESER (PAN) DAN ZOOM (PINCH) DENGAN OPACITY ---
+// --- FITUR GESER (PAN) DAN ZOOM (PINCH) DENGAN PERBAIKAN BUG INIALISASI ---
 // ==========================================================
 
-// Periksa class 'finished' untuk nonaktifkan interaksi
-
+// PERBAIKAN BUG MOUSE GESER
 canvas.addEventListener('wheel', e => {
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
 
-    // Aktifkan mode interaktif saat zoom
     setInteractionMode(true); 
 
     e.preventDefault();
@@ -609,9 +599,8 @@ canvas.addEventListener('wheel', e => {
 
     drawState.scale = newScale;
 
-    renderCanvas();
+    requestAnimationFrame(renderCanvas);
 
-    // Matikan mode interaktif setelah jeda singkat (untuk jeda scroll)
     clearTimeout(window.scrollTimer);
     window.scrollTimer = setTimeout(() => {
         setInteractionMode(false);
@@ -622,10 +611,11 @@ canvas.addEventListener('mousedown', e => {
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
     isDragging = true;
+    
+    // PERBAIKAN: INISIALISASI lastX dan lastY dengan posisi mouse saat ini
     lastX = e.clientX;
     lastY = e.clientY;
     
-    // Aktifkan mode interaktif saat drag mulai
     setInteractionMode(true); 
 });
 
@@ -639,21 +629,20 @@ canvas.addEventListener('mousemove', e => {
     drawState.x += dx;
     drawState.y += dy;
 
+    // PERBAIKAN: Update lastX dan lastY ke posisi baru
     lastX = e.clientX;
     lastY = e.clientY;
 
-    renderCanvas();
+    requestAnimationFrame(renderCanvas);
 });
 
 canvas.addEventListener('mouseup', () => {
     isDragging = false;
-    // Matikan mode interaktif saat drag selesai
     setInteractionMode(false); 
 });
 
 canvas.addEventListener('mouseleave', () => {
     isDragging = false;
-    // Matikan mode interaktif saat mouse keluar
     setInteractionMode(false); 
 });
 
@@ -665,10 +654,13 @@ function getDistance(p1, p2) {
 let initialPinchDistance = null;
 let initialScale = 1;
 
+// PERBAIKAN BUG SENTUH
 canvas.addEventListener('touchstart', e => {
     if (!container.classList.contains('uploaded') || container.classList.contains('finished')) return;
     e.preventDefault();
 
+    // PERBAIKAN: Reset pointers object (penting untuk menangani perpindahan jari)
+    pointers = {};
     for (let i = 0; i < e.touches.length; i++) {
         pointers[e.touches[i].identifier] = e.touches[i];
     }
@@ -677,16 +669,17 @@ canvas.addEventListener('touchstart', e => {
 
     if (touchCount === 1) {
         isDragging = true;
+        // PERBAIKAN: INISIALISASI lastX dan lastY dengan posisi sentuhan saat ini
         lastX = e.touches[0].clientX;
         lastY = e.touches[0].clientY;
         initialPinchDistance = null;
     } else if (touchCount === 2) {
         isDragging = false;
+        // PERBAIKAN: INISIALISASI PENTING untuk Zoom
         initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
         initialScale = drawState.scale;
     }
     
-    // Aktifkan mode interaktif saat sentuhan/pinch mulai
     setInteractionMode(true);
 });
 
@@ -707,8 +700,9 @@ canvas.addEventListener('touchmove', e => {
         drawState.x += dx;
         drawState.y += dy;
 
+        // PERBAIKAN: Update lastX dan lastY ke posisi sentuhan baru
         lastX = currentPointers[0].clientX;
-        lastY = currentPurenters[0].clientY;
+        lastY = currentPointers[0].clientY;
     } else if (touchCount === 2 && initialPinchDistance !== null) {
         const currentDistance = getDistance(currentPointers[0], currentPointers[1]);
         
@@ -722,7 +716,7 @@ canvas.addEventListener('touchmove', e => {
         drawState.scale = newScale;
     }
     
-    renderCanvas();
+    requestAnimationFrame(renderCanvas);
 });
 
 canvas.addEventListener('touchend', e => {
@@ -740,13 +734,13 @@ canvas.addEventListener('touchend', e => {
     }
     if (touchCount === 0) {
         isDragging = false;
-        // Matikan mode interaktif saat sentuhan terakhir dilepas
         setInteractionMode(false); 
     }
     
     if (touchCount === 1) {
         isDragging = true;
         const remainingTouch = Object.values(pointers)[0];
+        // PERBAIKAN: Update lastX dan lastY ke posisi jari yang tersisa
         lastX = remainingTouch.clientX;
         lastY = remainingTouch.clientY;
     }
@@ -756,7 +750,6 @@ canvas.addEventListener('touchcancel', () => {
     isDragging = false;
     pointers = {};
     initialPinchDistance = null;
-    // Matikan mode interaktif saat sentuhan dibatalkan
     setInteractionMode(false); 
 });
 </script>
