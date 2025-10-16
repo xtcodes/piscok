@@ -23,7 +23,7 @@ body {
   height: auto;
   transition: .5s ease;
   backface-visibility: hidden;
-  pointer-events: none; /* mencegah klik di image */
+  pointer-events: none; /* klik tidak memicu upload */
 }
 
 /* overlay di tengah */
@@ -70,7 +70,7 @@ body {
 <body>
 
 <h2>Drop Area Hanya Aktif Saat Overlay</h2>
-<p>Klik overlay atau drag file ke overlay. Klik di gambar tidak memicu upload.</p>
+<p>Klik di gambar **tidak akan memicu upload**. Drop area aktif hanya saat overlay muncul.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -85,24 +85,22 @@ const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 const container = document.getElementById('container');
 
-// aktifkan overlay saat hover (desktop) atau tap (mobile)
-function activateOverlay() {
+// Hanya aktifkan overlay saat hover (desktop)
+container.addEventListener('mouseenter', () => {
   dropArea.classList.add('active');
-}
-function deactivateOverlay() {
+});
+
+container.addEventListener('mouseleave', () => {
   dropArea.classList.remove('active');
-}
+});
 
-container.addEventListener('mouseenter', activateOverlay);
-container.addEventListener('mouseleave', deactivateOverlay);
-
-// klik hanya aktif jika overlay aktif
+// Klik hanya bisa di overlay aktif
 dropArea.addEventListener('click', () => {
-  if (!dropArea.classList.contains('active')) return;
+  if (!dropArea.classList.contains('active')) return; // aman
   fileInput.click();
 });
 
-// handle file input
+// Pilih file melalui dialog
 fileInput.addEventListener('change', (e) => {
   if (e.target.files && e.target.files[0]) {
     const file = e.target.files[0];
@@ -114,7 +112,7 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// drag & drop hanya jika overlay aktif
+// Drag & drop hanya aktif jika overlay aktif
 dropArea.addEventListener('dragover', (e) => {
   if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
@@ -139,11 +137,6 @@ dropArea.addEventListener('drop', (e) => {
     };
     reader.readAsDataURL(files[0]);
   }
-});
-
-// optional: support tap di mobile untuk menampilkan overlay
-container.addEventListener('touchstart', () => {
-  dropArea.classList.add('active');
 });
 </script>
   
