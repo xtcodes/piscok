@@ -6,22 +6,27 @@
 body {
   margin: 5em auto;
   padding: 2em;
+  font-family: Arial, sans-serif;
 }
+
 .container {
   position: relative;
   width: 100%;
+  max-width: 400px;
+  margin: auto;
 }
 
+/* image tetap terlihat tapi tidak bisa diklik */
 .image {
-  opacity: 1;
   display: block;
   width: 100%;
   height: auto;
   transition: .5s ease;
   backface-visibility: hidden;
+  pointer-events: none; /* mencegah klik di image */
 }
 
-/* middle tetap di tempatnya tapi hidden awal */
+/* overlay di tengah */
 .middle {
   transition: .5s ease;
   opacity: 0;
@@ -29,10 +34,9 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
   text-align: center;
-  width: 80%;          
-  aspect-ratio: 1 / 1; 
+  width: 80%;
+  aspect-ratio: 1 / 1;
   background-color: #fff;
   border: 2px solid rgba(0,0,0,0.5);
   display: flex;
@@ -40,21 +44,21 @@ body {
   justify-content: center;
   color: #333;
   cursor: pointer;
-  pointer-events: none; /* nonaktif klik awal */
+  pointer-events: none; /* nonaktif awal */
+  user-select: none;
 }
 
 .container:hover .image {
   opacity: 0.3;
 }
 
-/* hover tetap muncul */
 .container:hover .middle {
   opacity: 1;
 }
 
-/* saat overlay aktif, drop area aktif */
+/* aktifkan klik hanya saat overlay aktif */
 .middle.active {
-  pointer-events: auto; /* klik bisa diterima */
+  pointer-events: auto;
 }
 
 .middle.dragover {
@@ -66,11 +70,11 @@ body {
 <body>
 
 <h2>Drop Area Hanya Aktif Saat Overlay</h2>
-<p>Drop area baru bisa diinteraksi setelah overlay muncul.</p>
+<p>Klik overlay atau drag file ke overlay. Klik di gambar tidak memicu upload.</p>
 
 <div class="container" id="container">
-  <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
-  <div class="middle" id="dropArea">Seret atau ketuk disini</div>
+  <img src="placeholder.png" alt="Avatar" class="image">
+  <div class="middle" id="dropArea">Klik atau seret disini</div>
 </div>
 
 <input type="file" id="fileInput" style="display:none" accept="image/*">
@@ -81,22 +85,24 @@ const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
 const container = document.getElementById('container');
 
-// simulasi overlay muncul (misal hover atau event tertentu)
-container.addEventListener('mouseenter', () => {
+// aktifkan overlay saat hover (desktop) atau tap (mobile)
+function activateOverlay() {
   dropArea.classList.add('active');
-});
-
-container.addEventListener('mouseleave', () => {
+}
+function deactivateOverlay() {
   dropArea.classList.remove('active');
-});
+}
 
-// klik hanya aktif jika drop area aktif
+container.addEventListener('mouseenter', activateOverlay);
+container.addEventListener('mouseleave', deactivateOverlay);
+
+// klik hanya aktif jika overlay aktif
 dropArea.addEventListener('click', () => {
   if (!dropArea.classList.contains('active')) return;
   fileInput.click();
 });
 
-// pilih file melalui dialog
+// handle file input
 fileInput.addEventListener('change', (e) => {
   if (e.target.files && e.target.files[0]) {
     const file = e.target.files[0];
@@ -108,7 +114,7 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// drag & drop hanya aktif jika drop area aktif
+// drag & drop hanya jika overlay aktif
 dropArea.addEventListener('dragover', (e) => {
   if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
@@ -117,7 +123,6 @@ dropArea.addEventListener('dragover', (e) => {
 
 dropArea.addEventListener('dragleave', (e) => {
   if (!dropArea.classList.contains('active')) return;
-  e.preventDefault();
   dropArea.classList.remove('dragover');
 });
 
@@ -134,6 +139,11 @@ dropArea.addEventListener('drop', (e) => {
     };
     reader.readAsDataURL(files[0]);
   }
+});
+
+// optional: support tap di mobile untuk menampilkan overlay
+container.addEventListener('touchstart', () => {
+  dropArea.classList.add('active');
 });
 </script>
   
