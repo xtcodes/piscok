@@ -27,8 +27,8 @@ body {
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
-/* Hover effect untuk placeholder */
-.container:hover .image {
+/* Hover effect hanya jika drop area tidak aktif */
+.container:not(.uploaded):hover .image {
   filter: blur(3px);
   opacity: 0.7;
 }
@@ -42,7 +42,7 @@ body {
   width: 80%;
   aspect-ratio: 1 / 1;
   background: rgba(255, 255, 255, 0.5); /* putih transparan */
-  backdrop-filter: blur(8px); /* efek blur */
+  backdrop-filter: blur(8px);
   border: 2px solid rgba(0,0,0,0.2);
   display: flex;
   align-items: center;
@@ -68,8 +68,8 @@ body {
 </head>
 <body>
 
-<h2>Upload Gambar Aman + Overlay Putih Blur</h2>
-<p>Hover di placeholder membuat gambar blur. Overlay drop area putih blur saat aktif.</p>
+<h2>Upload Gambar Aman + Preview Asli</h2>
+<p>Hover di placeholder blur, setelah upload gambar asli tampil dan drop area hilang.</p>
 
 <div class="container" id="container">
   <img src="placeholder.png" alt="Avatar" class="image">
@@ -102,6 +102,10 @@ fileInput.addEventListener('change', (e) => {
     const reader = new FileReader();
     reader.onload = (event) => {
       image.src = event.target.result;
+
+      // Setelah upload, hilangkan drop area dan hapus blur hover
+      dropArea.style.display = 'none';
+      container.classList.add('uploaded');
     };
     reader.readAsDataURL(file);
   }
@@ -127,6 +131,10 @@ dropArea.addEventListener('drop', (e) => {
     const reader = new FileReader();
     reader.onload = (event) => {
       image.src = event.target.result;
+
+      // Setelah upload, hilangkan drop area dan hapus blur hover
+      dropArea.style.display = 'none';
+      container.classList.add('uploaded');
     };
     reader.readAsDataURL(files[0]);
   }
