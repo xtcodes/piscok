@@ -10,11 +10,10 @@ body {
 .container {
   position: relative;
   width: 100%;
-  max-width: 400px;
-  margin: auto;
 }
 
 .image {
+  opacity: 1;
   display: block;
   width: 100%;
   height: auto;
@@ -22,38 +21,43 @@ body {
   backface-visibility: hidden;
 }
 
-/* overlay hamparan */
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.2);
-  display: none; /* hidden awal */
-  z-index: 10;
-}
-
-/* drop area hanya muncul setelah overlay aktif */
-.drop-area {
+/* middle tetap di tempatnya tapi hidden awal */
+.middle {
+  transition: .5s ease;
+  opacity: 0;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 80%;
-  aspect-ratio: 1/1;
-  background: #fff;
+  -ms-transform: translate(-50%, -50%);
+  text-align: center;
+  width: 80%;          
+  aspect-ratio: 1 / 1; 
+  background-color: #fff;
   border: 2px solid rgba(0,0,0,0.5);
-  display: none; /* hidden awal */
+  display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
   color: #333;
   cursor: pointer;
-  z-index: 20;
+  pointer-events: none; /* nonaktif klik awal */
 }
 
-.drop-area.dragover {
+.container:hover .image {
+  opacity: 0.3;
+}
+
+/* hover tetap muncul */
+.container:hover .middle {
+  opacity: 1;
+}
+
+/* saat overlay aktif, drop area aktif */
+.middle.active {
+  pointer-events: auto; /* klik bisa diterima */
+}
+
+.middle.dragover {
   background-color: #f0f0f0;
   border-color: #04AA6D;
 }
@@ -61,32 +65,34 @@ body {
 </head>
 <body>
 
-<h2>Drop Area Aktif Setelah Overlay</h2>
-<p>Drop area baru muncul setelah overlay muncul. Klik sebelum itu tidak memicu apa-apa.</p>
+<h2>Drop Area Hanya Aktif Saat Overlay</h2>
+<p>Drop area baru bisa diinteraksi setelah overlay muncul.</p>
 
 <div class="container" id="container">
-  <img src="placeholder.png" alt="Avatar" class="image">
-  <div class="overlay" id="overlay"></div>
-  <div class="drop-area" id="dropArea">Seret atau ketuk disini</div>
+  <img src="placeholder.png" alt="Avatar" class="image" style="width:100%">
+  <div class="middle" id="dropArea">Seret atau ketuk disini</div>
 </div>
 
 <input type="file" id="fileInput" style="display:none" accept="image/*">
 
 <script>
-const overlay = document.getElementById('overlay');
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
 const image = document.querySelector('.image');
+const container = document.getElementById('container');
 
-// simulasi overlay muncul setelah 1 detik
-setTimeout(() => {
-  overlay.style.display = 'block';
-  dropArea.style.display = 'flex';
-}, 1000);
+// simulasi overlay muncul (misal hover atau event tertentu)
+container.addEventListener('mouseenter', () => {
+  dropArea.classList.add('active');
+});
 
-// klik drop area hanya berfungsi jika drop area sudah muncul
+container.addEventListener('mouseleave', () => {
+  dropArea.classList.remove('active');
+});
+
+// klik hanya aktif jika drop area aktif
 dropArea.addEventListener('click', () => {
-  if (dropArea.style.display !== 'flex') return; // aman, tidak memicu upload sebelum muncul
+  if (!dropArea.classList.contains('active')) return;
   fileInput.click();
 });
 
@@ -102,21 +108,21 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// drag & drop
+// drag & drop hanya aktif jika drop area aktif
 dropArea.addEventListener('dragover', (e) => {
-  if (dropArea.style.display !== 'flex') return;
+  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.add('dragover');
 });
 
 dropArea.addEventListener('dragleave', (e) => {
-  if (dropArea.style.display !== 'flex') return;
+  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.remove('dragover');
 });
 
 dropArea.addEventListener('drop', (e) => {
-  if (dropArea.style.display !== 'flex') return;
+  if (!dropArea.classList.contains('active')) return;
   e.preventDefault();
   dropArea.classList.remove('dragover');
 
@@ -130,6 +136,6 @@ dropArea.addEventListener('drop', (e) => {
   }
 });
 </script>
-
+  
 </body>
 </html>
