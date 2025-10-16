@@ -588,16 +588,17 @@ dropArea.addEventListener('drop', e => {
 });
 
 // --- LISTENER TOMBOL UNDUH ---
+// --- LISTENER TOMBOL UNDUH ---
 downloadButton.addEventListener('click', () => {
     if (downloadButton.disabled) return;
-    
+
     downloadButton.textContent = 'Diproses...';
-    downloadButton.disabled = true; 
-    
+    downloadButton.disabled = true;
+
     container.classList.add('finished');
     twibbonOpacity = NORMAL_OPACITY;
-    showGuideLines = false; 
-    requestAnimationFrame(renderCanvas); 
+    showGuideLines = false;
+    requestAnimationFrame(renderCanvas);
 
     getFinalCanvasBlob((blob) => {
         if (!blob) {
@@ -605,17 +606,29 @@ downloadButton.addEventListener('click', () => {
             downloadButton.textContent = 'Gagal!';
             return;
         }
-        
+
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.download = 'twibbon-hasil.png';
+
+        // --- Buat nama file dinamis ---
+        const siteName = window.location.hostname
+            .replace('www.', '')
+            .split('.')[0]; // ambil nama domain tanpa ekstensi
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const fileName = `${siteName}-${day}-${month}-${year}.png`;
+
+        // --- Set nama file dan unduh ---
+        link.download = fileName;
         link.href = url;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        
-        downloadButton.textContent = 'Selesai';
+
+        downloadButton.textContent = 'Selesai...';
     });
 });
 // ---------------------------------------------------------------------
