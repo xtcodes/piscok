@@ -6,8 +6,9 @@
 <style>
 body {
   font-family: Arial, sans-serif;
-  margin: 4em auto;
+  margin: 5em auto;
   padding: 2em;
+  position: relative; 
 }
 
 .container {
@@ -18,7 +19,7 @@ body {
   
   aspect-ratio: 1 / 1; 
   
-  cursor: default; /* Default cursor menjadi default */
+  cursor: default; 
   
   overflow: hidden;
   border: 2px dashed #ccc; 
@@ -36,7 +37,7 @@ body {
   width: 100%;
   height: 100%; 
   object-fit: contain; 
-  pointer-events: none; /* PENTING: gambar tidak bisa diklik */
+  pointer-events: none; 
   transition: opacity 0.3s ease, filter 0.3s ease;
   background-color: #e0e0e0; 
 }
@@ -60,9 +61,8 @@ body {
   align-items: center;
   justify-content: center;
   color: #333;
-  cursor: pointer; /* Cursor pointer untuk dropArea saat aktif */
+  cursor: pointer; 
   
-  /* PENTING: dropArea tidak terlihat dan tidak interaktif secara default */
   pointer-events: none; 
   user-select: none;
   opacity: 0;
@@ -73,9 +73,9 @@ body {
 
 /* Kapan dropArea menjadi aktif dan terlihat */
 .middle.active {
-  pointer-events: auto; /* Bisa diinteraksi */
+  pointer-events: auto; 
   opacity: 1;
-  visibility: visible; /* Terlihat */
+  visibility: visible; 
 }
 
 .middle.dragover {
@@ -91,26 +91,59 @@ canvas {
   height: 100%;
   display: none; 
   z-index: 5; 
-  /* Kursor grab saat gambar sudah diupload */
   cursor: grab;
-  touch-action: none; /* Memastikan interaksi sentuh ditangani oleh JS */
+  touch-action: none; 
 }
 
 canvas:active {
     cursor: grabbing;
 }
 
-/* Tambahkan tombol Download */
+/* Tombol Download: fullwidth, margin top */
 #downloadButton {
     display: none;
-    margin-top: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
+    width: 100%; 
+    max-width: 400px; 
+    margin: 10px auto 0 auto; 
+    padding: 12px 20px; 
+    font-size: 18px; 
     cursor: pointer;
     background-color: #04AA6D;
     color: white;
     border: none;
     border-radius: 4px;
+    box-sizing: border-box; 
+    transition: background-color 0.3s ease;
+}
+
+#downloadButton:hover {
+    background-color: #059b64;
+}
+
+/* Styling untuk partikel confetti yang lebih kecil */
+.confetti {
+    position: absolute;
+    width: 5px; /* Dikecilkan */
+    height: 5px; /* Dikecilkan */
+    background-color: #f00; 
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    /* Durasi dan jarak jatuh diperpanjang agar lebih menyebar */
+    animation: fadeOutAndFall 2.0s forwards; 
+    z-index: 1000; 
+}
+
+@keyframes fadeOutAndFall {
+    0% {
+        opacity: 1;
+        transform: translateY(0px) rotateZ(0deg);
+    }
+    100% {
+        opacity: 0;
+        /* Jarak jatuh diperpanjang */
+        transform: translateY(300px) rotateZ(720deg); 
+    }
 }
 </style>
 </head>
@@ -124,7 +157,7 @@ canvas:active {
 </p>
 
 <div class="container" id="container">
-  <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Upload Gambar Anda" class="image"> 
+  <img src="" alt="Upload Gambar Anda" class="image"> 
   <div class="middle" id="dropArea">Klik atau seret disini</div>
   <canvas id="canvas"></canvas>
 </div>
@@ -141,40 +174,46 @@ const image = document.querySelector('.image');
 const canvas = document.getElementById('canvas');
 const downloadButton = document.getElementById('downloadButton');
 const ctx = canvas.getContext('2d');
-const TWIBBON_URL = "twibbon.png"; 
-const PLACEHOLDER_URL = "placeholder.png"; 
+
+// === PERUBAHAN PENTING: Mengganti URL file lokal dengan Base64 atau URL online ===
+// Ganti dengan URL gambar Twibbon Anda yang sebenarnya (harus PNG transparan)
+const TWIBBON_URL = "twibbon.png"; // <--- GANTI INI
+// Ganti dengan URL gambar Placeholder Anda yang sebenarnya
+const PLACEHOLDER_URL = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="; // <--- GANTI INI
+// ==============================================================================
 
 // --- Variabel State Gambar Pengguna ---
-let userImage = null; // Objek Image dari gambar pengguna
-let twibbonImage = null; // Objek Image dari twibbon
+let userImage = null; 
+let twibbonImage = null; 
 let drawState = {
     x: 0,
     y: 0,
     scale: 1,
-    rotation: 0, // Belum diimplementasikan, tapi baik untuk dipersiapkan
-    initialScale: 1 // Skala awal agar gambar pas
+    rotation: 0, 
+    initialScale: 1 
 };
 
-// --- Variabel Interaksi ---
+// --- Variabel Interaksi (Dideklarasikan di sini untuk scope yang benar) ---
 let isDragging = false;
 let lastX = 0;
 let lastY = 0;
-let pointers = {}; // Untuk melacak sentuhan (multi-touch)
+let pointers = {}; 
 
 // --- Fungsi Utama Gambar (Render) ---
 function renderCanvas() {
+    // Pastikan variabel utama telah dimuat dan dimensi valid
     if (!userImage || !twibbonImage || canvas.width <= 0 || canvas.height <= 0) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
-    // Hitung ukuran gambar pengguna setelah diskalakan
     const userScaledWidth = userImage.width * drawState.initialScale * drawState.scale;
     const userScaledHeight = userImage.height * drawState.initialScale * drawState.scale;
 
-    // Gambar gambar pengguna (latar belakang)
     ctx.save();
+    // Geser dan putar konteks gambar ke titik tengah canvas
     ctx.translate(canvas.width / 2 + drawState.x, canvas.height / 2 + drawState.y);
-    // Jika rotasi diperlukan: ctx.rotate(drawState.rotation * Math.PI / 180);
+    
+    // Gambar userImage. Koordinatnya diatur sehingga pusat gambar berada di (0,0) sebelum ditranslasi.
     ctx.drawImage(
         userImage, 
         -userScaledWidth / 2, 
@@ -184,37 +223,37 @@ function renderCanvas() {
     );
     ctx.restore();
 
-    // Gambar twibbon (lapisan atas)
+    // Gambar twibbonImage di atasnya (selalu fit ke canvas)
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
 }
 
 // --- Fungsi Pengelolaan State Awal ---
 const resetToInitialState = (errorMessage = null) => {
-    if (errorMessage) alert(errorMessage); 
+    if (errorMessage) console.error(errorMessage); 
     
-    // Reset gambar dan state
     userImage = null;
     twibbonImage = null;
     drawState = { x: 0, y: 0, scale: 1, rotation: 0, initialScale: 1 };
     
-    // Tampilkan placeholder
+    // Set ulang UI ke status awal
     image.src = PLACEHOLDER_URL; 
     image.style.display = 'block';
     image.style.filter = 'none'; 
     image.style.opacity = '1';
 
-    // Sembunyikan canvas dan drop area
     canvas.style.display = 'none'; 
     dropArea.classList.remove('active'); 
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
     downloadButton.style.display = 'none';
 
-    // Reset container state
     container.classList.remove('uploaded'); 
     container.style.cursor = 'default'; 
 
-    console.warn(`[INFO] Resetting to initial state. Error: ${errorMessage}`);
+    // Jika ada error, berikan feedback ke user
+    if (errorMessage) {
+        alert("Terjadi masalah saat memuat gambar: " + errorMessage);
+    }
 };
 
 // --- Fungsi Pemuatan dan Penggabungan Gambar ---
@@ -222,33 +261,28 @@ function mergeImages(userImgSrc) {
   userImage = new Image();
   twibbonImage = new Image();
   let imagesLoaded = 0; 
-
+  
+  // Fungsi yang dipanggil setiap kali gambar selesai dimuat
   function drawIfReady() {
     imagesLoaded++;
-    if (imagesLoaded < 2) return; 
+    if (imagesLoaded < 2) return; // Tunggu hingga kedua gambar dimuat
 
-    // PENTING: Set dimensi canvas berdasarkan ukuran container saat ini
+    // Ambil ukuran kontainer aktual untuk Canvas
     const rect = container.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    if (canvas.width <= 0 || canvas.height <= 0) {
-        return resetToInitialState("Gagal menggambar: Ukuran area tampilan tidak valid.");
-    }
-    if (userImage.width <= 0 || userImage.height <= 0) {
-        return resetToInitialState("Gagal menggambar: Gambar pengguna tidak valid atau rusak.");
-    }
-    if (twibbonImage.width <= 0 || twibbonImage.height <= 0) {
-        return resetToInitialState("Gagal menggambar: Gambar twibbon tidak valid atau rusak.");
+    // Pemeriksaan Validitas
+    if (canvas.width <= 0 || canvas.height <= 0 || 
+        userImage.width <= 0 || userImage.height <= 0 ||
+        twibbonImage.width <= 0 || twibbonImage.height <= 0) {
+        return resetToInitialState("Gagal menggambar: Ukuran area tampilan atau gambar tidak valid.");
     }
     
-    // Hitung skala awal agar gambar pengguna pas di dalam container
+    // Hitung skala awal agar gambar user fit ke dalam canvas
     drawState.initialScale = Math.min(canvas.width / userImage.width, canvas.height / userImage.height);
-    // Jika ingin gambar menutupi penuh (cover), ganti Math.min menjadi Math.max:
-    // drawState.initialScale = Math.max(canvas.width / userImage.width, canvas.height / userImage.height);
 
-
-    // Sembunyikan elemen upload, tampilkan canvas
+    // Setel UI setelah berhasil di-upload
     canvas.style.display = 'block';
     image.style.display = 'none'; 
     dropArea.style.opacity = '0'; 
@@ -258,26 +292,30 @@ function mergeImages(userImgSrc) {
     container.style.cursor = 'default'; 
     downloadButton.style.display = 'block';
 
-    renderCanvas(); // Gambar pertama kali
+    renderCanvas(); // Panggil render pertama kali
   }
 
+  // Set crossOrigin agar gambar dari luar domain dapat diakses
   userImage.crossOrigin = "anonymous";
   twibbonImage.crossOrigin = "anonymous";
 
+  // Event handlers untuk userImage
   userImage.onload = drawIfReady;
   userImage.onerror = () => resetToInitialState('Gagal memuat gambar user! Pastikan file gambar valid.');
   userImage.src = userImgSrc;
 
+  // Event handlers untuk twibbonImage
   twibbonImage.onload = drawIfReady;
-  twibbonImage.onerror = () => resetToInitialState('Gagal memuat twibbon! Pastikan file "twibbon.png" ada dan path-nya benar.');
+  twibbonImage.onerror = () => resetToInitialState('Gagal memuat twibbon! Pastikan URL/path twibbon benar.');
   twibbonImage.src = TWIBBON_URL;
 }
 
-// --- Event Listeners Awal ---
+// --- Event Listeners Awal dan Interaksi File ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Inisialisasi placeholder saat DOM selesai dimuat
     image.onerror = () => {
-        console.warn(`[ERROR] Placeholder image not found at: ${PLACEHOLDER_URL}. Using fallback background.`);
+        console.warn(`[ERROR] Placeholder image not found. Using fallback background.`);
         image.src = ''; 
         image.alt = 'Gagal memuat placeholder';
     };
@@ -286,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     container.style.cursor = 'default';
 });
 
-// Mengelola efek hover/blur dan aktivasi dropArea
+// Mengaktifkan dropArea saat mouse masuk (jika belum ada gambar)
 container.addEventListener('mouseenter', () => {
     if (!container.classList.contains('uploaded')) {
         dropArea.classList.add('active'); 
@@ -294,6 +332,7 @@ container.addEventListener('mouseenter', () => {
     }
 });
 
+// Menonaktifkan dropArea saat mouse keluar (kecuali saat drag)
 container.addEventListener('mouseleave', () => {
     if (!container.classList.contains('uploaded') && !dropArea.classList.contains('dragover')) {
         dropArea.classList.remove('active'); 
@@ -301,26 +340,27 @@ container.addEventListener('mouseleave', () => {
     }
 });
 
-// klik drop area → file dialog
+// Memicu klik file input saat dropArea diklik
 dropArea.addEventListener('click', e => {
   e.stopPropagation(); 
   fileInput.click();
 });
 
-// upload file
+// Menangani pemilihan file dari dialog
 fileInput.addEventListener('change', e => {
   if (e.target.files && e.target.files[0]) {
     const reader = new FileReader();
     reader.onload = ev => mergeImages(ev.target.result);
     reader.readAsDataURL(e.target.files[0]);
     
+    // Sembunyikan dropArea setelah memilih file
     dropArea.classList.remove('active');
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
   }
 });
 
-// drag & drop
+// Drag and Drop Logic
 dropArea.addEventListener('dragover', e => {
   e.preventDefault(); 
   if (!dropArea.classList.contains('active')) {
@@ -331,14 +371,17 @@ dropArea.addEventListener('dragover', e => {
 
 dropArea.addEventListener('dragleave', () => {
   dropArea.classList.remove('dragover');
-  dropArea.classList.remove('active'); 
-  container.style.cursor = 'default'; 
+  // Pastikan tetap aktif jika mouse berada di dalam container, namun tidak sedang dragover
+  if (!container.matches(':hover')) {
+      dropArea.classList.remove('active'); 
+      container.style.cursor = 'default'; 
+  }
 });
 
 dropArea.addEventListener('drop', e => {
   e.preventDefault(); 
   dropArea.classList.remove('dragover');
-  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+  if (e.dataTransfer.files && e.dataTransfer.files[0] && e.dataTransfer.files[0].type.startsWith('image/')) {
     const reader = new FileReader();
     reader.onload = ev => mergeImages(ev.target.result);
     reader.readAsDataURL(e.dataTransfer.files[0]);
@@ -346,32 +389,33 @@ dropArea.addEventListener('drop', e => {
     dropArea.classList.remove('active');
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
+  } else {
+      resetToInitialState("File yang di-drop bukan gambar yang valid.");
   }
 });
 
+// Tombol Unduh
 downloadButton.addEventListener('click', () => {
     if (container.classList.contains('uploaded')) {
-        // Render ulang dengan ukuran yang lebih besar (misalnya 800x800) untuk kualitas lebih baik
+        // Buat canvas sementara dengan resolusi tinggi (800x800)
         const finalCanvas = document.createElement('canvas');
         const finalCtx = finalCanvas.getContext('2d');
-        const finalSize = 800; // Ukuran resolusi unduhan
+        const finalSize = 800; // Resolusi output
         finalCanvas.width = finalSize;
         finalCanvas.height = finalSize;
 
-        // Hitung ulang initialScale untuk resolusi baru
+        // Hitung ulang skala awal untuk resolusi final
         const finalInitialScale = Math.min(finalSize / userImage.width, finalSize / userImage.height);
         
-        // Hitung ukuran gambar pengguna setelah diskalakan untuk resolusi akhir
         const finalUserScaledWidth = userImage.width * finalInitialScale * drawState.scale;
         const finalUserScaledHeight = userImage.height * finalInitialScale * drawState.scale;
         
-        // Sesuaikan posisi pan (x, y) agar proporsional dengan resolusi baru
+        // Sesuaikan pergeseran (x, y) dari canvas preview ke canvas final
         const ratio = finalSize / canvas.width;
         const finalX = drawState.x * ratio;
         const finalY = drawState.y * ratio;
 
-
-        // Gambar gambar pengguna (latar belakang)
+        // 1. Gambar Gambar Pengguna
         finalCtx.save();
         finalCtx.translate(finalCanvas.width / 2 + finalX, finalCanvas.height / 2 + finalY);
         finalCtx.drawImage(
@@ -383,9 +427,8 @@ downloadButton.addEventListener('click', () => {
         );
         finalCtx.restore();
 
-        // Gambar twibbon (lapisan atas)
+        // 2. Gambar Twibbon di atasnya
         finalCtx.drawImage(twibbonImage, 0, 0, finalSize, finalSize);
-
 
         // Unduh gambar
         const link = document.createElement('a');
@@ -394,6 +437,8 @@ downloadButton.addEventListener('click', () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+
+        showConfetti();
     }
 });
 
@@ -402,26 +447,18 @@ downloadButton.addEventListener('click', () => {
 // --- FITUR GESER (PAN) DAN ZOOM (PINCH) ---
 // ==========================================================
 
-// --- MOUSE & PC ---
-
-// 1. Zoom dengan Scroll
+// Zoom dengan roda gulir (Mouse)
 canvas.addEventListener('wheel', e => {
     if (!container.classList.contains('uploaded')) return;
-
     e.preventDefault();
-    
-    const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1; // Zoom out atau Zoom in
-    
-    // Batasi zoom
+    const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1; 
     const newScale = drawState.scale * scaleFactor;
     if (newScale < 0.5 || newScale > 5.0) return; // Batasan Zoom
-
     drawState.scale = newScale;
-
     renderCanvas();
 });
 
-// 2. Geser dengan Mouse Drag
+// Geser (Mouse)
 canvas.addEventListener('mousedown', e => {
     if (!container.classList.contains('uploaded')) return;
     e.preventDefault();
@@ -433,136 +470,94 @@ canvas.addEventListener('mousedown', e => {
 canvas.addEventListener('mousemove', e => {
     if (!isDragging || !container.classList.contains('uploaded')) return;
     e.preventDefault();
-    
     const dx = e.clientX - lastX;
     const dy = e.clientY - lastY;
-
     drawState.x += dx;
     drawState.y += dy;
-
     lastX = e.clientX;
     lastY = e.clientY;
-
     renderCanvas();
 });
 
-canvas.addEventListener('mouseup', () => {
-    isDragging = false;
-});
+canvas.addEventListener('mouseup', () => { isDragging = false; });
+canvas.addEventListener('mouseleave', () => { isDragging = false; });
 
-canvas.addEventListener('mouseleave', () => {
-    isDragging = false;
-});
-
-
-// --- TOUCH & MOBILE ---
-
+// Sentuh (Touch)
 function getDistance(p1, p2) {
     return Math.sqrt(Math.pow(p2.clientX - p1.clientX, 2) + Math.pow(p2.clientY - p1.clientY, 2));
 }
 
-function getCenter(p1, p2) {
-    return {
-        x: (p1.clientX + p2.clientX) / 2,
-        y: (p1.clientY + p2.clientY) / 2
-    };
-}
-
 let initialPinchDistance = null;
-let initialScale = 1;
+let initialScaleTouch = 1; // Menggunakan nama berbeda agar tidak konflik
 
 canvas.addEventListener('touchstart', e => {
     if (!container.classList.contains('uploaded')) return;
     e.preventDefault();
-
-    // Simpan semua sentuhan
     for (let i = 0; i < e.touches.length; i++) {
         pointers[e.touches[i].identifier] = e.touches[i];
     }
-
     const touchCount = Object.keys(pointers).length;
-
     if (touchCount === 1) {
-        // 1 Jari: Geser (Pan)
+        // Mode Geser (1 jari)
         isDragging = true;
         lastX = e.touches[0].clientX;
         lastY = e.touches[0].clientY;
-        initialPinchDistance = null; // Pastikan pinch di-reset
+        initialPinchDistance = null; 
     } else if (touchCount === 2) {
-        // 2 Jari: Zoom (Pinch)
-        isDragging = false; // Nonaktifkan dragging 1 jari
-        initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
-        initialScale = drawState.scale;
+        // Mode Pinch/Zoom (2 jari)
+        isDragging = false; 
+        const touches = Object.values(pointers);
+        initialPinchDistance = getDistance(touches[0], touches[1]);
+        initialScaleTouch = drawState.scale;
     }
 });
 
 canvas.addEventListener('touchmove', e => {
     if (!container.classList.contains('uploaded')) return;
     e.preventDefault();
-
-    // Perbarui posisi sentuhan
     for (let i = 0; i < e.touches.length; i++) {
         pointers[e.touches[i].identifier] = e.touches[i];
     }
     const currentPointers = Object.values(pointers);
     const touchCount = currentPointers.length;
-
     if (touchCount === 1 && isDragging) {
-        // 1 Jari: Geser (Pan)
+        // Geser
         const dx = currentPointers[0].clientX - lastX;
         const dy = currentPointers[0].clientY - lastY;
-
         drawState.x += dx;
         drawState.y += dy;
-
         lastX = currentPointers[0].clientX;
         lastY = currentPointers[0].clientY;
     } else if (touchCount === 2 && initialPinchDistance !== null) {
-        // 2 Jari: Zoom (Pinch)
+        // Pinch/Zoom
         const currentDistance = getDistance(currentPointers[0], currentPointers[1]);
-        
         let scaleDelta = currentDistance / initialPinchDistance;
-
-        let newScale = initialScale * scaleDelta;
-        
-        // Batasi zoom
+        let newScale = initialScaleTouch * scaleDelta;
         if (newScale < 0.5) newScale = 0.5;
         if (newScale > 5.0) newScale = 5.0;
-
         drawState.scale = newScale;
-
-        // TODO: Anda bisa menambahkan logika untuk menggeser saat pinch
-        // agar zoom terjadi di tengah-tengah jari
-
     }
-    
     renderCanvas();
 });
 
 canvas.addEventListener('touchend', e => {
     if (!container.classList.contains('uploaded')) return;
-
-    // Hapus sentuhan yang sudah berakhir
     for (let i = 0; i < e.changedTouches.length; i++) {
         delete pointers[e.changedTouches[i].identifier];
     }
-    
     const touchCount = Object.keys(pointers).length;
-
-    if (touchCount < 2) {
-        initialPinchDistance = null;
-        initialScale = 1; // Reset skala pinch
-    }
+    
     if (touchCount === 0) {
         isDragging = false;
+        initialPinchDistance = null;
     }
-    
-    // Jika masih ada 1 jari tersisa, aktifkan kembali mode geser
     if (touchCount === 1) {
+        // Beralih ke mode geser
         isDragging = true;
         const remainingTouch = Object.values(pointers)[0];
         lastX = remainingTouch.clientX;
         lastY = remainingTouch.clientY;
+        initialPinchDistance = null; // Hentikan pinch
     }
 });
 
@@ -573,9 +568,37 @@ canvas.addEventListener('touchcancel', () => {
 });
 
 // ==========================================================
-// --- END FITUR GESER (PAN) DAN ZOOM (PINCH) ---
+// --- FUNGSI PARTIKEL CONFETTI ---
 // ==========================================================
+function showConfetti() {
+    const containerRect = container.getBoundingClientRect();
+    const numberOfConfetti = 100; 
+    const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#ffa500']; 
 
+    for (let i = 0; i < numberOfConfetti; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        
+        // Posisi awal di sekitar pusat container
+        confetti.style.left = `${containerRect.left + containerRect.width / 2 + (Math.random() - 0.5) * 100}px`;
+        confetti.style.top = `${containerRect.top + containerRect.height / 2 + (Math.random() - 0.5) * 100}px`;
+        
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        const size = Math.random() * 3 + 2; 
+        confetti.style.width = `${size}px`;
+        confetti.style.height = `${size}px`;
+
+        confetti.style.animationDelay = `${Math.random() * 0.8}s`; 
+        confetti.style.animationDuration = `${1.5 + Math.random() * 0.5}s`; 
+        
+        document.body.appendChild(confetti);
+
+        confetti.addEventListener('animationend', () => {
+            confetti.remove();
+        });
+    }
+}
 </script>
 </body>
   </html>
