@@ -77,7 +77,7 @@ p {
   object-fit: contain; 
   pointer-events: none;
   transition: opacity 0.3s ease, filter 0.3s ease;
-  background-color: #e0e0e0; 
+  background-color: #e0e0e0; /* LATAR BELAKANG PLACHOLDER: Abu-abu Terang */
 }
 
 .container:not(.uploaded):hover .image {
@@ -222,7 +222,6 @@ const downloadButton = document.getElementById('downloadButton');
 const shareButton = document.getElementById('shareButton');
 const ctx = canvas.getContext('2d');
 const TWIBBON_URL = "twibbon.png"; 
-// const PLACEHOLDER_URL = "placeholder.png"; // Tidak digunakan lagi untuk performa
 
 let userImage = null; 
 let twibbonImage = null; 
@@ -327,7 +326,7 @@ const resetToInitialState = (errorMessage = null) => {
     twibbonOpacity = NORMAL_OPACITY; 
     showGuideLines = false; 
     
-    // PERBAIKAN: Gunakan Data URI yang sangat ringan untuk memastikan placeholder muncul.
+    // Pastikan placeholder ringan selalu disetel saat reset
     image.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; 
     image.style.display = 'block';
     image.style.filter = 'none'; 
@@ -490,12 +489,8 @@ async function shareImage() {
 // --- Event Listeners Awal ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Pastikan image.src sudah diatur di HTML sebagai Data URI yang ringan
-    container.classList.remove('uploaded');
-    container.style.cursor = 'default';
-    
-    downloadButton.style.display = 'none';
-    shareButton.style.display = 'none';
+    // Pastikan resetToInitialState dipanggil untuk memastikan semua state dan visual awal benar
+    resetToInitialState();
 });
 
 // Mengelola visual drop area
