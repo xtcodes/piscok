@@ -5,7 +5,7 @@
 <title>Twibbon Uploader</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-/* --- KODE CSS ASLI ANDA --- */
+/* --- KODE CSS --- */
 body {
   font-family: Arial, sans-serif;
   padding: 0; 
@@ -155,14 +155,12 @@ canvas:active {
     transition: background-color 0.3s, cursor 0.3s;
 }
 
-/* --- PERBAIKAN CSS: Gaya tombol disabled permanen --- */
 #downloadButton:disabled {
     background-color: #cccccc; 
     color: #666666; 
     cursor: not-allowed; 
     pointer-events: none; 
 }
-/* ----------------------------------------------------- */
 
 #shareButton {
     display: none; 
@@ -186,7 +184,7 @@ canvas:active {
         padding: 15px; 
     }
 }
-  </style>
+</style>
 </head>
 <body>
 <div class="dialog-overlay"> 
@@ -214,7 +212,7 @@ canvas:active {
 <input type="file" id="fileInput" style="display:none" accept="image/*">
 
 <script>
-// --- KODE JAVASCRIPT UTAMA ---
+// --- KODE JAVASCRIPT ---
 const container = document.getElementById('container');
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
@@ -226,8 +224,9 @@ const ctx = canvas.getContext('2d');
 const TWIBBON_URL = "twibbon.png"; 
 const PLACEHOLDER_URL = "placeholder.png"; 
 
+// Variabel global
 let userImage = null; 
-let twibbonImage = null; 
+let twibbonImage = null; // Dideklarasikan, tetapi src-nya dimuat belakangan (lazy load)
 let drawState = {
     x: 0,
     y: 0,
@@ -239,8 +238,6 @@ let drawState = {
 let twibbonOpacity = 1.0; 
 const ACTIVE_OPACITY = 0.4; 
 const NORMAL_OPACITY = 1.0; 
-
-// Variabel baru untuk mengontrol tampilan garis bantu
 let showGuideLines = false; 
 
 let isDragging = false;
@@ -258,7 +255,6 @@ function setInteractionMode(isActive) {
         requestAnimationFrame(renderCanvas); 
     }
     
-    // Mengubah status garis bantu
     const newGuideLinesStatus = isActive;
     if (showGuideLines !== newGuideLinesStatus) {
         showGuideLines = newGuideLinesStatus;
@@ -287,41 +283,39 @@ function renderCanvas() {
     );
     ctx.restore();
 
-    // 2. Gambar Garis Bantu JIKA showGuideLines true
+    // 2. Gambar Garis Bantu JIKA showGuideLines true (Toleransi 5 piksel)
     if (showGuideLines) {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         
-        ctx.save(); // Simpan state sebelum menggambar garis
+        ctx.save(); 
         ctx.lineWidth = 1;
-        ctx.strokeStyle = '#FFFFFF'; // Garis putih
-        ctx.setLineDash([5, 5]); // Garis putus-putus
+        ctx.strokeStyle = '#FFFFFF'; 
+        ctx.setLineDash([5, 5]); 
         
-        // Cek apakah gambar sudah di tengah sumbu X (geser kiri/kanan)
-        if (Math.abs(drawState.x) < 5) { // Toleransi 5 piksel
-            // Garis Vertikal (Sumbu X)
+        // Garis Vertikal (Sumbu X)
+        if (Math.abs(drawState.x) < 5) { 
             ctx.beginPath();
             ctx.moveTo(centerX, 0);
             ctx.lineTo(centerX, canvas.height);
             ctx.stroke();
         }
         
-        // Cek apakah gambar sudah di tengah sumbu Y (geser atas/bawah)
-        if (Math.abs(drawState.y) < 5) { // Toleransi 5 piksel
-            // Garis Horizontal (Sumbu Y)
+        // Garis Horizontal (Sumbu Y)
+        if (Math.abs(drawState.y) < 5) { 
             ctx.beginPath();
             ctx.moveTo(0, centerY);
             ctx.lineTo(canvas.width, centerY);
             ctx.stroke();
         }
         
-        ctx.restore(); // Kembalikan state
+        ctx.restore(); 
     }
     
     // 3. Gambar Twibbon (Lapisan Atas) dengan Opacity
     ctx.globalAlpha = twibbonOpacity; 
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 1.0; // Reset alpha
+    ctx.globalAlpha = 1.0; 
 }
 
 // --- FUNGSI PENGELOLAAN STATE AWAL ---
@@ -334,7 +328,8 @@ const resetToInitialState = (errorMessage = null) => {
     twibbonOpacity = NORMAL_OPACITY; 
     showGuideLines = false; 
     
-    image.src = PLACEHOLDER_URL; 
+    // Placeholder menggunakan data URI yang sangat ringan (sudah ada di HTML)
+    image.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; 
     image.style.display = 'block';
     image.style.filter = 'none'; 
     image.style.opacity = '1';
@@ -355,9 +350,10 @@ const resetToInitialState = (errorMessage = null) => {
     downloadButton.disabled = false;
 };
 
+// --- FUNGSI MERGE IMAGES (TERMASUK LAZY LOAD TWIBBON) ---
 function mergeImages(userImgSrc) {
   userImage = new Image();
-  twibbonImage = new Image();
+  twibbonImage = new Image(); // Inisialisasi di sini (lazy load)
   let imagesLoaded = 0; 
 
   function drawIfReady() {
@@ -401,19 +397,19 @@ function mergeImages(userImgSrc) {
   userImage.onerror = () => resetToInitialState('Gagal memuat gambar user! Pastikan file gambar valid.');
   userImage.src = userImgSrc;
 
+  // Twibbon mulai dimuat HANYA saat gambar user diunggah.
   twibbonImage.onload = drawIfReady;
-  twibbonImage.onerror = () => resetToInitialState('Gagal memuat twibbon! Pastikan file "twibbon.png" ada dan path-nya benar.');
+  twibbonImage.onerror = () => resetToInitialState('Gagal memuat twibbon! Pastikan file "twibbon.png" ada.');
   twibbonImage.src = TWIBBON_URL;
 }
 
-// --- FUNGSI DOWNLOAD & SHARE ---
-
+// --- FUNGSI DOWNLOAD & SHARE (MENGGUNAKAN FINAL CANVAS) ---
 function getFinalCanvasBlob(callback) {
     if (!container.classList.contains('uploaded')) return;
     
     const finalCanvas = document.createElement('canvas');
     const finalCtx = finalCanvas.getContext('2d');
-    const finalSize = 800;
+    const finalSize = 800; // Ukuran output yang baik
     finalCanvas.width = finalSize;
     finalCanvas.height = finalSize;
 
@@ -425,6 +421,7 @@ function getFinalCanvasBlob(callback) {
     const finalX = drawState.x * ratio;
     const finalY = drawState.y * ratio;
 
+    // Gambar User
     finalCtx.save();
     finalCtx.translate(finalCanvas.width / 2 + finalX, finalCanvas.height / 2 + finalY);
     finalCtx.drawImage(
@@ -436,6 +433,7 @@ function getFinalCanvasBlob(callback) {
     );
     finalCtx.restore();
 
+    // Gambar Twibbon (opacity 1.0)
     finalCtx.globalAlpha = 1.0; 
     finalCtx.drawImage(twibbonImage, 0, 0, finalSize, finalSize);
 
@@ -448,10 +446,11 @@ async function shareImage() {
         return;
     }
     
+    // Matikan fitur bantu sebelum berbagi
     const oldOpacity = twibbonOpacity;
     const oldGuideLines = showGuideLines;
     twibbonOpacity = NORMAL_OPACITY; 
-    showGuideLines = false; // Matikan garis bantu
+    showGuideLines = false; 
     requestAnimationFrame(renderCanvas);
 
     if (navigator.canShare && navigator.canShare({ files: [new File([""], "image.png", { type: "image/png" })] })) {
@@ -472,6 +471,7 @@ async function shareImage() {
                      alert(`Gagal berbagi gambar. Error: ${error.message}`);
                 }
             } finally {
+                // Kembalikan fitur bantu
                 if (!container.classList.contains('finished')) {
                     twibbonOpacity = oldOpacity;
                     showGuideLines = oldGuideLines;
@@ -479,46 +479,23 @@ async function shareImage() {
                 }
             }
         });
-
-    } 
-    else if (navigator.share) {
-         try {
-            await navigator.share({
-                title: 'Twibbon Keren!',
-                text: 'Saya sudah membuat twibbon! Silakan coba juga.',
-                url: window.location.href,
-            });
-        } catch (error) {
-             if (error.name !== 'AbortError') {
-                 alert(`Gagal berbagi link. Error: ${error.message}`);
-             }
-        } finally {
-             if (!container.classList.contains('finished')) {
-                 twibbonOpacity = oldOpacity;
-                 showGuideLines = oldGuideLines;
-                 requestAnimationFrame(renderCanvas);
-             }
-        }
-    } 
-    else {
+    } else {
         alert("Browser Anda tidak mendukung fitur berbagi. Silakan unduh gambar dan bagikan secara manual.");
-         if (!container.classList.contains('finished')) {
+        // Kembalikan fitur bantu
+        if (!container.classList.contains('finished')) {
              twibbonOpacity = oldOpacity;
              showGuideLines = oldGuideLines;
              requestAnimationFrame(renderCanvas);
-         }
+        }
     }
 }
 
 
-// --- Event Listeners Dll ---
+// --- Event Listeners Awal ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    image.onerror = () => {
-        image.src = ''; 
-        image.alt = 'Gagal memuat placeholder';
-    };
-    image.src = PLACEHOLDER_URL; 
+    // Hanya mengatur placeholder jika ada placeholder.png (jika tidak, pakai data URI di HTML)
+    // image.src = PLACEHOLDER_URL; 
     container.classList.remove('uploaded');
     container.style.cursor = 'default';
     
@@ -526,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
     shareButton.style.display = 'none';
 });
 
-// Mengelola efek hover/blur dan aktivasi dropArea
+// Mengelola visual drop area
 container.addEventListener('mouseenter', () => {
     if (!container.classList.contains('uploaded')) {
         dropArea.classList.add('active'); 
@@ -560,7 +537,7 @@ fileInput.addEventListener('change', e => {
   }
 });
 
-// drag & drop
+// drag & drop events
 dropArea.addEventListener('dragover', e => {
   e.preventDefault(); 
   if (!dropArea.classList.contains('active')) {
@@ -589,7 +566,7 @@ dropArea.addEventListener('drop', e => {
   }
 });
 
-// --- LISTENER TOMBOL UNDUH ---
+// Tombol Unduh
 downloadButton.addEventListener('click', () => {
     if (downloadButton.disabled) return;
     
@@ -620,9 +597,8 @@ downloadButton.addEventListener('click', () => {
         downloadButton.textContent = 'Selesai';
     });
 });
-// ---------------------------------------------------------------------
 
-// Event listener tombol Bagikan
+// Tombol Bagikan
 shareButton.addEventListener('click', shareImage);
 
 
