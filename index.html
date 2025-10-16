@@ -16,11 +16,8 @@ body {
   width: 100%;
   max-width: 400px;
   margin: auto;
-  
   aspect-ratio: 1 / 1; 
-  
   cursor: default;
-  
   overflow: hidden;
   border: 2px dashed #ccc; 
   border-radius: 8px; 
@@ -98,16 +95,19 @@ canvas:active {
     cursor: grabbing;
 }
 
-/* 2. Gaya untuk Grup Tombol Fleksibel */
+/* STYLING BARU UNTUK GRUP TOMBOL */
 .button-group {
-    display: flex; /* Mengubah grup tombol menjadi flex container */
-    justify-content: flex-end; /* Memindahkan elemen ke kanan */
+    /* Mengubah div ini menjadi container fleksibel */
+    display: flex;
+    /* Memberi jarak atas */
     margin-top: 10px;
+    /* Memastikan tombol berada di kanan (atau memenuhi kontainer) */
+    justify-content: space-between; 
 }
 
-/* 3. Gaya Tombol Unduh (agar fleksibel dan tidak 100% lebar) */
+/* Gaya Tombol Unduh: Fleksibel dan mengambil ruang */
 #downloadButton {
-    display: none; /* Tetap disembunyikan sampai gambar siap */
+    display: none; /* Disembunyikan secara default */
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
@@ -115,31 +115,32 @@ canvas:active {
     color: white;
     border: none;
     border-radius: 4px;
-    flex-grow: 1; /* Biarkan tombol unduh mengambil ruang yang tersedia */
-    margin-right: 10px; /* Jarak antara tombol unduh dan bagikan */
+    /* Mengambil sisa ruang yang tersedia */
+    flex-grow: 1; 
+    /* Jarak dengan tombol bagikan */
+    margin-right: 10px; 
+    /* Menggunakan flex agar display block disematkan saat visible */
+    display: none; 
 }
 
-/* 4. Gaya Tombol Bagikan (bentuk persegi 40x40) */
+/* Gaya Tombol Bagikan: Persegi 40x40px */
 #shareButton {
-    display: none; /* Sembunyikan secara default */
-    width: 40px; /* Ukuran yang diminta */
-    height: 40px; /* Ukuran yang diminta */
-    padding: 0; /* Hapus padding default */
+    display: none; /* Disembunyikan secara default */
+    width: 40px; 
+    height: 40px; 
+    padding: 0;
     font-size: 18px; /* Ukuran ikon */
     cursor: pointer;
     background-color: #1DA1F2; /* Warna sosial media/bagikan */
     color: white;
     border: none;
     border-radius: 4px;
-    display: flex; /* Gunakan flex untuk menengahkan ikon */
+    /* Flex untuk menengahkan ikon */
+    display: flex; 
     align-items: center;
     justify-content: center;
-    flex-shrink: 0; /* Pastikan tombol tidak menyusut */
-}
-
-/* Tampilkan tombol bagikan ketika tombol unduh terlihat */
-.button-group:has(#downloadButton[style*="block"]) #shareButton {
-    display: flex; 
+    /* Memastikan tombol tidak menyusut */
+    flex-shrink: 0; 
 }
 
 </style>
@@ -235,8 +236,10 @@ const resetToInitialState = (errorMessage = null) => {
     dropArea.classList.remove('active'); 
     dropArea.style.opacity = '0';
     dropArea.style.visibility = 'hidden';
+    
+    // Sembunyikan kedua tombol
     downloadButton.style.display = 'none';
-    shareButton.style.display = 'none'; // Sembunyikan tombol bagikan
+    shareButton.style.display = 'none'; 
 
     container.classList.remove('uploaded'); 
     container.style.cursor = 'default'; 
@@ -271,8 +274,10 @@ function mergeImages(userImgSrc) {
     dropArea.classList.remove('active'); 
     container.classList.add('uploaded'); 
     container.style.cursor = 'default'; 
+    
+    // Tampilkan kedua tombol saat gambar selesai diunggah
     downloadButton.style.display = 'block';
-    shareButton.style.display = 'flex'; // Tampilkan tombol bagikan
+    shareButton.style.display = 'flex'; 
 
     renderCanvas();
   }
@@ -289,8 +294,8 @@ function mergeImages(userImgSrc) {
   twibbonImage.src = TWIBBON_URL;
 }
 
+// --- FUNGSI DOWNLOAD & SHARE ---
 
-// --- FUNGSI DOWNLOAD BARU ---
 function getFinalCanvasBlob(callback) {
     if (!container.classList.contains('uploaded')) return;
     
@@ -325,14 +330,13 @@ function getFinalCanvasBlob(callback) {
     finalCanvas.toBlob(callback, 'image/png');
 }
 
-// --- FUNGSI SHARE BARU ---
 async function shareImage() {
     if (!container.classList.contains('uploaded')) {
         alert("Mohon upload dan edit gambar Anda terlebih dahulu.");
         return;
     }
 
-    // 1. Cek apakah Web Share API didukung dan bisa membagikan file
+    // 1. Cek Web Share API dengan file
     if (navigator.canShare && navigator.canShare({ files: [new File([""], "image.png", { type: "image/png" })] })) {
         
         getFinalCanvasBlob(async (blob) => {
@@ -342,9 +346,9 @@ async function shareImage() {
                 const file = new File([blob], 'twibbon-hasil.png', { type: 'image/png' });
                 await navigator.share({
                     files: [file],
-                    title: 'Twibbon Keren',
+                    title: 'Twibbon Keren!',
                     text: 'Lihat hasil twibbon saya!',
-                    url: window.location.href, // Bagikan link halaman ini juga
+                    url: window.location.href,
                 });
                 console.log('Berbagi berhasil!');
             } catch (error) {
@@ -356,17 +360,17 @@ async function shareImage() {
         });
 
     } 
-    // 2. Fallback untuk Web Share API dasar (tanpa file)
+    // 2. Fallback untuk Web Share API dasar (hanya link/teks)
     else if (navigator.share) {
          try {
             await navigator.share({
-                title: 'Twibbon Keren',
-                text: 'Lihat twibbon saya (Anda dapat mengunduh dan mengunggahnya secara manual)!',
+                title: 'Twibbon Keren!',
+                text: 'Saya sudah membuat twibbon! Silakan coba juga.',
                 url: window.location.href,
             });
-            console.log('Berbagi berhasil (fallback)!');
+            console.log('Berbagi link berhasil (fallback)!');
         } catch (error) {
-            console.error('Gagal berbagi:', error);
+            console.error('Gagal berbagi link:', error);
              if (error.name !== 'AbortError') {
                  alert(`Gagal berbagi link. Error: ${error.message}`);
              }
@@ -379,7 +383,7 @@ async function shareImage() {
 }
 
 
-// --- Event Listeners Dll (Tidak Berubah Signifikan) ---
+// --- Event Listeners Dll (Tidak Berubah) ---
 
 document.addEventListener('DOMContentLoaded', () => {
     image.onerror = () => {
@@ -587,7 +591,7 @@ canvas.addEventListener('touchmove', e => {
         drawState.y += dy;
 
         lastX = currentPointers[0].clientX;
-        lastY = currentPancers[0].clientY;
+        lastY = currentPointers[0].clientY;
     } else if (touchCount === 2 && initialPinchDistance !== null) {
         const currentDistance = getDistance(currentPointers[0], currentPointers[1]);
         
