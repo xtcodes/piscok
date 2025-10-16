@@ -5,37 +5,46 @@
 <title>Twibbon Uploader</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-/* --- Pengaturan Dasar Body & Wrapper --- */
+/* --- CSS LAYOUT BARU: MODERN MINIMALIS --- */
+/* Pengaturan Dasar Body & Wrapper */
 body {
   font-family: Arial, sans-serif;
   padding: 1.5em;
+  background-color: #f0f2f5; /* Latar belakang abu-abu muda untuk kontras */
 }
 
-/* Kontainer utama untuk membatasi lebar konten. Default: lebar penuh */
 .main-wrapper {
     width: 100%;
-    margin: 4em auto; /* Pusatkan seluruh wrapper */
+    margin: 4em auto;
 }
 
-/* --- Area Kontainer Twibbon (Default: 100% lebar, max 400px agar tidak terlalu besar di ponsel) --- */
+/* KARTU TWIBBON: EFEK MENGAMBANG */
 .container {
   position: relative;
   width: 100%;
-  max-width: 400px; /* Batasan di perangkat kecil agar tidak terlalu lebar */
+  max-width: 400px; /* Batasan di perangkat kecil */
   margin: auto; 
   
   aspect-ratio: 1 / 1; 
   
   cursor: default;
   overflow: hidden;
-  border: 2px dashed #ccc; 
-  border-radius: 8px; 
-  background-color: #f9f9f9; 
-  transition: border-color 0.3s ease; 
+  
+  /* PERUBAHAN UTAMA UNTUK EFEK CARD */
+  border: none; /* Hapus border dash */
+  border-radius: 12px; /* Sudut lebih membulat */
+  background-color: #ffffff; /* Latar belakang putih */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), /* Bayangan lembut */
+              0 3px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; 
 }
-/* ... (Gaya untuk .container:not(.uploaded):hover, .image, .middle, canvas, dan lainnya tetap sama) ... */
+
+/* Efek Hover untuk interaksi yang lebih menarik */
 .container:not(.uploaded):hover {
-  border-color: #04AA6D; 
+  border-color: transparent; 
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15),
+              0 5px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px); /* Sedikit naik saat di-hover */
 }
 
 .image {
@@ -53,6 +62,7 @@ body {
   opacity: 0.7;
 }
 
+/* Area Drop/Middle */
 .middle {
   position: absolute;
   top: 50%;
@@ -62,7 +72,9 @@ body {
   aspect-ratio: 1 / 1;
   background: rgba(255, 255, 255, 0.5); 
   backdrop-filter: blur(8px);
-  border: 2px solid rgba(0,0,0,0.2);
+  /* PERUBAHAN PADA MIDDLE */
+  border: 2px dashed #007bff; /* Gunakan warna primer untuk drop zone */
+  border-radius: 8px; /* Sesuaikan radius */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,13 +122,12 @@ canvas:active {
     margin-top: 10px;
     justify-content: space-between; 
     
-    /* Batasan di perangkat kecil agar sejajar dengan .container */
     max-width: 400px;
     margin-left: auto;
     margin-right: auto;
 }
 
-/* Tombol Unduh & Bagikan (Gaya tetap sama) */
+/* Tombol Unduh */
 #downloadButton {
     display: none; 
     padding: 10px 20px;
@@ -130,6 +141,7 @@ canvas:active {
     margin-right: 10px; 
 }
 
+/* Tombol Bagikan: Persegi 40x40px */
 #shareButton {
     display: none; 
     width: 40px; 
@@ -150,17 +162,12 @@ canvas:active {
 
 /* === MEDIA QUERY UNTUK LAYAR DESKTOP (LEBAR > 768px) === */
 @media (min-width: 768px) {
-    /* 1. Atur lebar maksimum konten utama menjadi 800px */
     .main-wrapper {
         max-width: 800px; 
     }
-
-    /* 2. Tingkatkan ukuran maksimum area twibbon menjadi 600px */
     .container {
         max-width: 600px; 
     }
-    
-    /* 3. Tingkatkan ukuran maksimum grup tombol agar sejajar dengan kontainer baru (600px) */
     .button-group {
         max-width: 600px;
     }
@@ -281,7 +288,6 @@ function mergeImages(userImgSrc) {
     imagesLoaded++;
     if (imagesLoaded < 2) return; 
 
-    // PENTING: Hitung ulang dimensi canvas, karena dimensi container bisa berubah karena media query
     const rect = container.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
@@ -325,7 +331,7 @@ function getFinalCanvasBlob(callback) {
     
     const finalCanvas = document.createElement('canvas');
     const finalCtx = finalCanvas.getContext('2d');
-    const finalSize = 800; // Resolusi unduhan tetap 800px
+    const finalSize = 800;
     finalCanvas.width = finalSize;
     finalCanvas.height = finalSize;
 
@@ -333,7 +339,6 @@ function getFinalCanvasBlob(callback) {
     const finalUserScaledWidth = userImage.width * finalInitialScale * drawState.scale;
     const finalUserScaledHeight = userImage.height * finalInitialScale * drawState.scale;
     
-    // Gunakan lebar container saat ini untuk menghitung rasio, yang mungkin 400px atau 600px
     const ratio = finalSize / container.getBoundingClientRect().width; 
     const finalX = drawState.x * ratio;
     const finalY = drawState.y * ratio;
